@@ -188,6 +188,11 @@ namespace Blockcore.Networks
         public List<NetworkAddress> SeedNodes { get; protected set; }
 
         /// <summary>
+        /// The list of nodes on the xServer network that our current node tries to connect to.
+        /// </summary>
+        public List<NetworkXServer> XServerSeedNodes { get; protected set; }
+
+        /// <summary>
         /// The list of DNS seeds from which to get IP addresses when bootstrapping a node.
         /// </summary>
         public List<DNSSeedData> DNSSeeds { get; protected set; }

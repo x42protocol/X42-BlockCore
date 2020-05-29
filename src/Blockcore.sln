@@ -107,6 +107,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Persistence", "Persistence"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.Features.BlockStore.Persistence.LevelDb", "Features\Persistence\Blockcore.Features.BlockStore.Persistence.LevelDb\Blockcore.Features.BlockStore.Persistence.LevelDb.csproj", "{AB9A2812-610D-4061-BE71-784AB39FE415}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "x42.Features.xServer", "Features\x42.Features.xServer\x42.Features.xServer.csproj", "{9FD10661-D37E-40B1-B3A7-70469FE04780}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.Features.Consensus.Persistence.LevelDb", "Features\Persistence\Blockcore.Features.Consensus.Persistence.LevelDb\Blockcore.Features.Consensus.Persistence.LevelDb.csproj", "{E4C7723E-F2D1-41A3-A22A-3D5CB3AE6D6C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blockcore.Persistence.LevelDb", "Features\Persistence\Blockcore.Persistence.LevelDb\Blockcore.Persistence.LevelDb.csproj", "{7760BAD0-B57D-4A57-95DB-A5C53EED5D54}"

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using Blockcore.NBitcoin;
 using Blockcore.P2P;
+using NBitcoin.Protocol;
 
 namespace Blockcore.Utilities.Extensions
 {
@@ -58,6 +59,11 @@ namespace Blockcore.Utilities.Extensions
         public static IPEndPoint ToIPEndPoint(this string ipAddress, int port)
         {
             return Utils.ParseIpEndpoint(ipAddress, port);
+        }
+
+        public static NetworkXServer ToIPXServerEndPoint(this string ipAddress, int port, bool isSSL)
+        {
+            return Utils.ParseIpXServerEndpoint(ipAddress, port, isSSL);
         }
 
         /// <summary>
