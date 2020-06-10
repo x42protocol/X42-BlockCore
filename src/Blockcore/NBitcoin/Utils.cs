@@ -747,7 +747,7 @@ namespace Blockcore.NBitcoin
             return new IPEndPoint(ParseIPAddress(endpoint), port);
         }
 
-        public static NetworkXServer ParseIpXServerEndpoint(string endpoint, int port, bool isSSL)
+        public static NetworkXServer ParseIpXServerEndpoint(string endpoint, int port, int networkProtocol)
         {
             // Get the position of the last ':'.
             int colon = endpoint.LastIndexOf(':');
@@ -772,11 +772,36 @@ namespace Blockcore.NBitcoin
                     }
                     port = int.Parse(endpoint.Substring(colon + 1));
                     endpoint = endpoint.Substring(endpointAddressStartIndex, colon - endpointAddressStartIndex);
-                    isSSL = hasHTTPS;
+                    networkProtocol = hasHTTPS ? 2 : 0;
                 }
             }
 
-            return new NetworkXServer(endpoint, port, isSSL);
+            return new NetworkXServer(endpoint, port, networkProtocol);
+        }
+
+        private static string GetProtocolString(int networkProtocol)
+        {
+            string result = string.Empty;
+            switch (networkProtocol)
+            {
+                case 0: // Default to HTTP
+                case 1:
+                    result = "http";
+                    break;
+                case 2:
+                    result = "https";
+                    break;
+                case 3:
+                    // TODO: Add Websocket
+                    result = "ws";
+                    break;
+            }
+            return result;
+        }
+
+        public static string GetServerUrl(int networkProtocol, string networkAddress, long networkPort)
+        {
+            return $"{GetProtocolString(networkProtocol)}://{networkAddress}:{networkPort}/";
         }
 
         private static async Task<string> DnsLookup(string remoteHostName)
