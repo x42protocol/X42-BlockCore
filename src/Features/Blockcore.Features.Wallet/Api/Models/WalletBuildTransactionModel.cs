@@ -15,5 +15,8 @@ namespace Blockcore.Features.Wallet.Api.Models
         [JsonProperty(PropertyName = "transactionId")]
         [JsonConverter(typeof(UInt256JsonConverter))]
         public uint256 TransactionId { get; set; }
+
+        [JsonProperty(PropertyName = "inputAddresses")]
+        public List<string> InputAddresses { get; set; }
     }
 }
