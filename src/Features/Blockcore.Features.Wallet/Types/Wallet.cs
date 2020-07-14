@@ -731,7 +731,7 @@ namespace Blockcore.Features.Wallet.Types
         /// <summary>
         /// Gets the first external address
         /// </summary>
-        /// <returns>An unused address</returns>
+        /// <returns>The first address</returns>
         public HdAddress GetFirstExternalAddress()
         {
             IEnumerable<HdAddress> addresses = this.ExternalAddresses;
