@@ -19,6 +19,7 @@ using Blockcore.NBitcoin;
 using Blockcore.Networks;
 using Blockcore.P2P;
 using Blockcore.P2P.Peer;
+using Blockcore.Primitives;
 using Blockcore.Utilities;
 using Blockcore.Utilities.JsonErrors;
 using Blockcore.Utilities.ModelStateErrors;
@@ -267,7 +268,7 @@ namespace Blockcore.Controllers
         {
             try
             {
-                Guard.NotEmpty(trxid, nameof(trxid));
+                Guard.NotEmpty(txid, nameof(txid));
 
                 if (!uint256.TryParse(trxid, out uint256 trxhash))
                 {
