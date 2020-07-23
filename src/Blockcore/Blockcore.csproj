@@ -7,7 +7,7 @@
     <PackageId>Blockcore.Core</PackageId>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <IsPackable>true</IsPackable>
-    <Version>1.1.9</Version>
+    <Version>1.1.10</Version>
   </PropertyGroup>
 
   <ItemGroup>
