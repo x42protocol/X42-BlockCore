@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
+using NBitcoin;
 using Blockcore.Base;
 using Blockcore.Consensus.BlockInfo;
 using Blockcore.Consensus.Chain;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Controllers.Models;
 using Blockcore.Features.BlockStore.AddressIndexing;
-using Blockcore.Features.BlockStore.Api.Models;
 using Blockcore.Features.BlockStore.Models;
 using Blockcore.Features.Consensus;
 using Blockcore.Interfaces;
@@ -30,6 +33,8 @@ namespace Blockcore.Features.BlockStore.Api.Controllers
     public class BlockStoreController : Microsoft.AspNetCore.Mvc.Controller
     {
         private readonly IAddressIndexer addressIndexer;
+
+        private readonly IUtxoIndexer utxoIndexer;
 
         /// <summary>Provides access to the block store on disk.</summary>
         private readonly IBlockStore blockStore;
@@ -81,8 +86,12 @@ namespace Blockcore.Features.BlockStore.Api.Controllers
         /// Retrieves the <see cref="addressIndexer"/>'s tip.
         /// </summary>
         /// <returns>An instance of <see cref="AddressIndexerTipModel"/> containing the tip's hash and height.</returns>
+        /// <response code="200">Returns the address indexer tip</response>
+        /// <response code="400">Unexpected exception occurred</response>
         [Route(BlockStoreRouteEndPoint.GetAddressIndexerTip)]
         [HttpGet]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public IActionResult GetAddressIndexerTip()
         {
             try
@@ -102,8 +111,12 @@ namespace Blockcore.Features.BlockStore.Api.Controllers
         /// </summary>
         /// <param name="query">An object containing the necessary parameters to search for a block.</param>
         /// <returns><see cref="BlockModel"/> if block is found, <see cref="NotFoundObjectResult"/> if not found. Returns <see cref="IActionResult"/> with error information if exception thrown.</returns>
+        /// <response code="200">Returns data about the block or block not found message</response>
+        /// <response code="400">Block hash invalid, or an unexpected exception occurred</response>
         [Route(BlockStoreRouteEndPoint.GetBlock)]
         [HttpGet]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public IActionResult GetBlock([FromQuery] SearchByHashRequest query)
         {
             if (!this.ModelState.IsValid)
@@ -166,8 +179,12 @@ namespace Blockcore.Features.BlockStore.Api.Controllers
         /// </summary>
         /// <remarks>This is an API implementation of an RPC call.</remarks>
         /// <returns>The current tip height. Returns <c>null</c> if fails. Returns <see cref="IActionResult"/> with error information if exception thrown.</returns>
+        /// <response code="200">Returns the block count</response>
+        /// <response code="400">Unexpected exception occurred</response>
         [Route(BlockStoreRouteEndPoint.GetBlockCount)]
         [HttpGet]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public IActionResult GetBlockCount()
         {
             try
@@ -184,9 +201,13 @@ namespace Blockcore.Features.BlockStore.Api.Controllers
         /// <summary>Provides balance of the given addresses confirmed with at least <paramref name="minConfirmations"/> confirmations.</summary>
         /// <param name="addresses">A comma delimited set of addresses that will be queried.</param>
         /// <param name="minConfirmations">Only blocks below consensus tip less this parameter will be considered.</param>
-        /// <returns>A result object containing the balance for each requested address and if so, a meesage stating why the indexer is not queryable.</returns>
+        /// <returns>A result object containing the balance for each requested address and if so, a message stating why the indexer is not queryable.</returns>
+        /// <response code="200">Returns balances for the requested addresses</response>
+        /// <response code="400">Unexpected exception occurred</response>
         [Route(BlockStoreRouteEndPoint.GetAddressesBalances)]
         [HttpGet]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public IActionResult GetAddressesBalances(string addresses, int minConfirmations)
         {
             try
@@ -208,11 +229,16 @@ namespace Blockcore.Features.BlockStore.Api.Controllers
             }
         }
 
+
         /// <summary>Provides verbose balance data of the given addresses.</summary>
         /// <param name="addresses">A comma delimited set of addresses that will be queried.</param>
-        /// <returns>A result object containing the balance for each requested address and if so, a meesage stating why the indexer is not queryable.</returns>
+        /// <returns>A result object containing the balance for each requested address and if so, a message stating why the indexer is not queryable.</returns>
+        /// <response code="200">Returns balances for the requested addresses</response>
+        /// <response code="400">Unexpected exception occurred</response>
         [Route(BlockStoreRouteEndPoint.GetVerboseAddressesBalances)]
         [HttpGet]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public IActionResult GetVerboseAddressesBalancesData(string addresses)
         {
             try
