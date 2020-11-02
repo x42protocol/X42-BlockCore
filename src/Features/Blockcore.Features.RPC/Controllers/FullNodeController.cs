@@ -56,9 +56,6 @@ namespace Blockcore.Features.RPC.Controllers
         /// <summary>An interface implementation for the blockstore.</summary>
         private readonly IBlockStore blockStore;
 
-        /// <summary>A interface implementation for the initial block download state.</summary>
-        private readonly IInitialBlockDownloadState ibdState;
-
         private readonly IStakeChain stakeChain;
 
         public FullNodeController(
@@ -75,7 +72,6 @@ namespace Blockcore.Features.RPC.Controllers
             IConnectionManager connectionManager = null,
             IConsensusManager consensusManager = null,
             IBlockStore blockStore = null,
-            IInitialBlockDownloadState ibdState = null,
             IStakeChain stakeChain = null,
             INetworkWeight networkWeight = null)
             : base(
@@ -93,7 +89,6 @@ namespace Blockcore.Features.RPC.Controllers
             this.getUnspentTransaction = getUnspentTransaction;
             this.networkDifficulty = networkDifficulty;
             this.blockStore = blockStore;
-            this.ibdState = ibdState;
             this.stakeChain = stakeChain;
             this.networkWeight = networkWeight;
         }
