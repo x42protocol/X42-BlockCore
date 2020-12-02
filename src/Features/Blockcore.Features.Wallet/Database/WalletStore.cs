@@ -344,7 +344,6 @@ namespace Blockcore.Features.Wallet.Database
                 if (item.Confirmed == null) walletBalanceResult.AmountUnconfirmed = (long)item.Total;
                 else walletBalanceResult.AmountConfirmed = (long)item.Total;
             }
-
             return walletBalanceResult;
         }
 
@@ -370,7 +369,6 @@ namespace Blockcore.Features.Wallet.Database
                 if (item.Confirmed == null) walletBalanceResult.AmountUnconfirmed = (long)item.Total;
                 else walletBalanceResult.AmountConfirmed = (long)item.Total;
             }
-
             return walletBalanceResult;
         }
 

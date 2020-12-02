@@ -199,7 +199,7 @@ namespace Blockcore.Features.BlockStore.AddressIndexing
 
             this.logger.LogDebug("Address indexing is enabled.");
 
-            this.tipDataStore = this.db.GetCollection<AddressIndexerTipData>(DbTipDataKey);
+            this.tipDataStore = (LiteCollection<AddressIndexerTipData>)this.db.GetCollection<AddressIndexerTipData>(DbTipDataKey);
 
             lock (this.lockObject)
             {
@@ -234,18 +234,13 @@ namespace Blockcore.Features.BlockStore.AddressIndexing
             this.nodeStats.RegisterStats(this.AddInlineStats, StatsType.Inline, this.GetType().Name, 400);
         }
 
-        private bool IsReadyToSave()
-        {
-            return this.dateTimeProvider.GetUtcNow() - this.lastFlushTime > this.flushChangesInterval && this.IndexerTip.Height == this.consensusManager.Tip.Height;
-        }
-
         private async Task IndexAddressesContinuouslyAsync()
         {
             var watch = Stopwatch.StartNew();
 
             while (!this.cancellation.IsCancellationRequested)
             {
-                if (IsReadyToSave())
+                if (this.dateTimeProvider.GetUtcNow() - this.lastFlushTime > this.flushChangesInterval)
                 {
                     this.logger.LogDebug("Flushing changes.");
 
@@ -344,6 +339,7 @@ namespace Blockcore.Features.BlockStore.AddressIndexing
             }
 
             this.SaveAll();
+
         }
 
         private void RewindAndSave(ChainedHeader rewindToHeader)
@@ -478,13 +474,18 @@ namespace Blockcore.Features.BlockStore.AddressIndexing
                     }
 
                     if (address.Address != string.Empty)
+                    {
                         this.ProcessBalanceChangeLocked(header.Height, address.Address, amountSpent, false);
-
+                    }
                     if (address.HotAddress != string.Empty)
+                    {
                         this.ProcessBalanceChangeLocked(header.Height, address.HotAddress, amountSpent, false);
-
+                    }
                     if (address.ColdAddress != string.Empty)
+                    {
                         this.ProcessBalanceChangeLocked(header.Height, address.ColdAddress, amountSpent, false);
+                }
+
                 }
 
                 // Process outputs.
@@ -508,14 +509,18 @@ namespace Blockcore.Features.BlockStore.AddressIndexing
                         }
 
                         if (address.Address != string.Empty)
+                        {
                             this.ProcessBalanceChangeLocked(header.Height, address.Address, amountReceived, true);
-
+                        }
                         if (address.HotAddress != string.Empty)
+                        {
                             this.ProcessBalanceChangeLocked(header.Height, address.HotAddress, amountReceived, true);
-
+                        }
                         if (address.ColdAddress != string.Empty)
+                        {
                             this.ProcessBalanceChangeLocked(header.Height, address.ColdAddress, amountReceived, true);
                     }
+                }
                 }
 
                 this.outpointsRepository.RecordRewindData(rewindData);
