@@ -68,7 +68,7 @@ jobs:
         dotnet test -v=normal --filter "FullyQualifiedName!~IntegrationTests&Unstable!=True" -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
 
     - name: Build
-      run: dotnet build -c ${{env.BUILD_CONFIGURATION}} -r ${{env.RELEASE_CONFIGURATION}} -v m ${{env.SOLUTION_PATH}}
+      run: dotnet build -c ${{env.BUILD_CONFIGURATION}} -r ${{env.RELEASE_CONFIGURATION}} -v m ${{env.SOLUTION_PATH}} -p:ImportByWildcardBeforeSolution=false
 
     - uses: actions/upload-artifact@v2
       with:
