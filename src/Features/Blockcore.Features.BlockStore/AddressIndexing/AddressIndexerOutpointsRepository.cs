@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Blockcore.Consensus.TransactionInfo;
+using Blockcore.Utilities;
 using LiteDB;
 using Microsoft.Extensions.Logging;
 
@@ -31,8 +33,8 @@ namespace Blockcore.Features.BlockStore.AddressIndexing
         {
             this.db = db;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-            this.addressIndexerOutPointData = (LiteCollection<OutPointData>)db.GetCollection<OutPointData>(DbOutputsDataKey);
-            this.addressIndexerRewindData = (LiteCollection<AddressIndexerRewindData>)db.GetCollection<AddressIndexerRewindData>(DbOutputsRewindDataKey);
+            this.addressIndexerOutPointData = db.GetCollection<OutPointData>(DbOutputsDataKey);
+            this.addressIndexerRewindData = db.GetCollection<AddressIndexerRewindData>(DbOutputsRewindDataKey);
             this.maxCacheItems = maxItems;
         }
 
