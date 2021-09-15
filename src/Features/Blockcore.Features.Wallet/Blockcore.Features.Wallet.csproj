@@ -27,7 +27,6 @@
     <ProjectReference Include="..\..\Blockcore\Blockcore.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Api\" />
     <Folder Include="AddressBook\" />
   </ItemGroup>
   <ItemGroup>
