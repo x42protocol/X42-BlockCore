@@ -179,7 +179,7 @@ namespace Blockcore.Features.BlockStore.AddressIndexing
 
             string dbPath = Path.Combine(this.dataFolder.RootPath, AddressIndexerDatabaseFilename);
 
-            this.db = new LiteDatabase(new ConnectionString() { Filename = dbPath, Upgrade=true });
+            this.db = new LiteDatabase(new ConnectionString() { Filename = dbPath, Upgrade = true });
 
             this.addressIndexRepository = new AddressIndexRepository(this.db, this.loggerFactory);
 
