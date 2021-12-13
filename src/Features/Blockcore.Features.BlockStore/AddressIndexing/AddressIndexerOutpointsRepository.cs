@@ -34,8 +34,8 @@ namespace Blockcore.Features.BlockStore.AddressIndexing
         {
             this.db = db;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-            this.addressIndexerOutPointData = db.GetCollection<OutPointData>(DbOutputsDataKey);
-            this.addressIndexerRewindData = db.GetCollection<AddressIndexerRewindData>(DbOutputsRewindDataKey);
+            this.addressIndexerOutPointData = (LiteCollection<OutPointData>)db.GetCollection<OutPointData>(DbOutputsDataKey);
+            this.addressIndexerRewindData = (LiteCollection<AddressIndexerRewindData>)db.GetCollection<AddressIndexerRewindData>(DbOutputsRewindDataKey);
             this.maxCacheItems = maxItems;
         }
 
@@ -120,9 +120,9 @@ namespace Blockcore.Features.BlockStore.AddressIndexing
         public void PurgeOldRewindData(int height)
         {
             // Delete all in one go based on query. This is more optimal than query, iterate and delete individual records.
-            int purgedCount = this.addressIndexerRewindData.Delete(x => x.BlockHeight < height);
+           int purgedCount = this.addressIndexerRewindData.DeleteMany(x => x.BlockHeight < height);
 
-            this.logger.LogInformation("Purged {0} rewind data items.", purgedCount);
+           this.logger.LogInformation("Purged {0} rewind data items.", purgedCount);
         }
 
         /// <summary>Reverts changes made by processing blocks with height higher than <param name="height">.</param></summary>

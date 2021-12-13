@@ -46,21 +46,20 @@ namespace Blockcore.Features.Wallet.Database
             }
 
             BsonMapper mapper = this.Create();
-            LiteDB.FileMode fileMode = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? LiteDB.FileMode.Exclusive : LiteDB.FileMode.Shared;
 
             if (!File.Exists(dbPath))
             {
-                this.db = new LiteDatabase(new ConnectionString() { Filename = dbPath, Mode = fileMode }, mapper: mapper);
+                this.db = new LiteDatabase(new ConnectionString() { Filename = dbPath, Upgrade = true }, mapper: mapper);
             }
             else
             {
                 // Only perform this check if the database file already exists.
-                this.db = new LiteDatabase(new ConnectionString() { Filename = dbPath, Mode = fileMode }, mapper: mapper);
+                this.db = new LiteDatabase(new ConnectionString() { Filename = dbPath, Upgrade = true }, mapper: mapper);
 
                 // Attempt to access the user version, this will crash if the loaded database is V5 and we use V4 packages.
                 try
                 {
-                    var userVersion = this.db.Engine.UserVersion;
+                    var userVersion = this.db.UserVersion;
                 }
                 catch (LiteDB.LiteException)
                 {
@@ -70,7 +69,7 @@ namespace Blockcore.Features.Wallet.Database
                     File.Move(dbPath, dbBackupPath);
 
                     // Re-create the database object after we renamed the file.
-                    this.db = new LiteDatabase(new ConnectionString() { Filename = dbPath, Mode = fileMode }, mapper: mapper);
+                    this.db = new LiteDatabase(new ConnectionString() { Filename = dbPath, Upgrade = true }, mapper: mapper);
                 }
             }
 
@@ -83,8 +82,8 @@ namespace Blockcore.Features.Wallet.Database
         {
             this.repo = new LiteRepository(this.db);
 
-            this.trxCol = this.db.GetCollection<TransactionOutputData>("transactions");
-            this.dataCol = this.db.GetCollection<WalletData>("data");
+            this.trxCol = (LiteCollection<TransactionOutputData>)this.db.GetCollection<TransactionOutputData>("transactions");
+            this.dataCol = (LiteCollection<WalletData>)this.db.GetCollection<WalletData>("data");
 
             this.trxCol.EnsureIndex(x => x.OutPoint, true);
             this.trxCol.EnsureIndex(x => x.Address, false);
@@ -146,7 +145,7 @@ namespace Blockcore.Features.Wallet.Database
             //  of the 'take' param. In case some of the inputs we have are
             // in the same trx they will be grouped in to a single entry.
 
-            Query historySpentQuery =
+            var historySpentQuery =
                 Query.And(
                     Query.EQ("AccountIndex", new BsonValue(accountIndex)),
                     Query.Not("SpendingDetails", BsonValue.Null)
@@ -170,7 +169,7 @@ namespace Blockcore.Features.Wallet.Database
               .Take(take)
               .ToList();
 
-            Query historyUnSpentQuery = Query.EQ("AccountIndex", new BsonValue(accountIndex));
+            var historyUnSpentQuery = Query.EQ("AccountIndex", new BsonValue(accountIndex));
             if (excludeColdStake)
             {
                 historyUnSpentQuery =

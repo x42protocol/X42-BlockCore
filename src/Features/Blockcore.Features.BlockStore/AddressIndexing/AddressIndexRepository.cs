@@ -20,7 +20,7 @@ namespace Blockcore.Features.BlockStore.AddressIndexing
         public AddressIndexRepository(LiteDatabase db, ILoggerFactory loggerFactory, int maxBalanceChangesToKeep = 50_000) : base(maxBalanceChangesToKeep)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-            this.addressIndexerDataCollection = db.GetCollection<AddressIndexerData>(DbAddressDataKey);
+            this.addressIndexerDataCollection = (LiteCollection<AddressIndexerData>)db.GetCollection<AddressIndexerData>(DbAddressDataKey);
             this.addressIndexerDataCollection.EnsureIndex("BalanceChangedHeightIndex", "$.BalanceChanges[*].BalanceChangedHeight", false);
         }
 

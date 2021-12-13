@@ -21,8 +21,7 @@ namespace Blockcore.Features.BlockStore.Tests
 
         public AddressIndexerOutpointsRepositoryTests()
         {
-            LiteDB.FileMode fileMode = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? LiteDB.FileMode.Exclusive : LiteDB.FileMode.Shared;
-            var db = new LiteDatabase(new ConnectionString() { Filename = this.RandomString(20) + ".db", Upgrade = true, Mode = fileMode });
+            var db = new LiteDatabase(new ConnectionString() { Filename = this.RandomString(20) + ".db", Upgrade = true });
 
             this.repository = new AddressIndexerOutpointsRepository(db, new ExtendedLoggerFactory(), this.maxItems);
         }

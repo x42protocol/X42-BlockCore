@@ -19,7 +19,7 @@ using Blockcore.Interfaces;
 using Blockcore.Networks;
 using Blockcore.Utilities;
 using LiteDB;
-using FileMode = LiteDB.FileMode;
+
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Script = Blockcore.Consensus.ScriptInfo.Script;
@@ -179,14 +179,13 @@ namespace Blockcore.Features.BlockStore.AddressIndexing
 
             string dbPath = Path.Combine(this.dataFolder.RootPath, AddressIndexerDatabaseFilename);
 
-            FileMode fileMode = RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? FileMode.Exclusive : FileMode.Shared;
-            this.db = new LiteDatabase(new ConnectionString() { Filename = dbPath, Mode = fileMode });
+            this.db = new LiteDatabase(new ConnectionString() { Filename = dbPath, Upgrade=true });
 
             this.addressIndexRepository = new AddressIndexRepository(this.db, this.loggerFactory);
 
             this.logger.LogDebug("Address indexing is enabled.");
 
-            this.tipDataStore = this.db.GetCollection<AddressIndexerTipData>(DbTipDataKey);
+            this.tipDataStore = (LiteCollection<AddressIndexerTipData>)this.db.GetCollection<AddressIndexerTipData>(DbTipDataKey);
 
             lock (this.lockObject)
             {
