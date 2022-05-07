@@ -70,7 +70,7 @@
     },
     "X42 (MAIN/LOCAL)": {
       "commandName": "Project",
-      "commandLineArgs": "--chain=X42 -server -addressindex -rpcallowip=127.0.0.1 -rpcbind=127.0.0.1 -rpcpassword=rpcpassword -rpcuser=rpcuser -datadir=rocksdbdata -dbtype=rocksdb"
+      "commandLineArgs": "--chain=X42 -server -addressindex -rpcallowip=127.0.0.1 -rpcbind=127.0.0.1 -rpcpassword=rpcpassword -rpcuser=rpcuser -datadir=rocksdbdata -dbtype=rocksdb  --upgradedbonversion=true"
     },
     "X42 (TEST/LOCAL)": {
       "commandName": "Project",
