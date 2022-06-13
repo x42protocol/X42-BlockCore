@@ -203,6 +203,10 @@
     "RSC (TEST/LOCAL)": {
       "commandName": "Project",
       "commandLineArgs": "--chain=RSC -server -rpcallowip=127.0.0.1 -rpcbind=127.0.0.1 -rpcpassword=rpcpassword -rpcuser=rpcuser -datadir=nodedata -testnet"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "commandLineArgs": "--chain=X42 -server -rpcallowip=127.0.0.1 -rpcbind=127.0.0.1 -rpcpassword=rpcpassword -rpcuser=rpcuser -testnet -dbtype=leveldb --upgradedbonversion=true"
     }
   }
 }
