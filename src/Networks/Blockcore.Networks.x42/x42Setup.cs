@@ -114,7 +114,7 @@ namespace Blockcore.Networks.x42
             HashGenesisBlock = "0x8cfb6674e48320009b1228644fab3fe850d53d073689365c1ecad55d8f77b504",
             HashMerkleRoot = "0x1d825dbc2ff5f9078885824347d231e54d72733779b0a3563b457c19368018ae",
             DNS = new[] { "testnet1.x42seed.host" },
-            Nodes = new[] { "161.97.135.78", "161.97.86.48"},
+            Nodes = new[] { "18.138.31.117" },
             Checkpoints = new Dictionary<int, CheckpointInfo>
             {
                 { 0, new CheckpointInfo(new uint256("0x11bd504102b42b24680d7b4f9b9e9521adc1b690253494d108193cdfcdd2ef0b"), new uint256("0x0000000000000000000000000000000000000000000000000000000000000000")) }, // Genisis
