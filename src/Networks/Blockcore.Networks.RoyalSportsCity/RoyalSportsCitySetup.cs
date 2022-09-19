@@ -18,9 +18,9 @@ namespace Blockcore.Networks.RoyalSportsCity
             Magic = "01-52-53-43",
             CoinType = 6599,
             PremineReward = 3000000000,
-            PoWBlockReward = 210,
-            PoSBlockReward = 21,
-            LastPowBlock = 2100,
+            PoWBlockReward = 3000,
+            PoSBlockReward = 1000,
+            LastPowBlock = 25000,
             MaxSupply = 21000000000,
             GenesisText = "Decentralized Royal  Sports City",
             TargetSpacing = TimeSpan.FromSeconds(64),
@@ -34,7 +34,7 @@ namespace Blockcore.Networks.RoyalSportsCity
             RootFolderName = "royalsportscity",
             CoinTicker = "RSC",
             DefaultPort = 14001,
-            DefaultRPCPort = 14002,
+            DefaultRPCPort = 15002,
             DefaultAPIPort = 14003,
             PubKeyAddress = 60, // R 
             ScriptAddress = 122, // r
@@ -62,9 +62,9 @@ namespace Blockcore.Networks.RoyalSportsCity
             DefaultPort = 24001,
             DefaultRPCPort = 24002,
             DefaultAPIPort = 24003,
-            PubKeyAddress = 60, // R 
-            ScriptAddress = 122, // r
-            SecretAddress = 122,
+            PubKeyAddress = 111,
+            ScriptAddress = 196,
+            SecretAddress = 239,
             GenesisTime = 1641376738,
             GenesisNonce = 128636,
             GenesisBits = 0x1F00FFFF,
@@ -88,9 +88,9 @@ namespace Blockcore.Networks.RoyalSportsCity
             DefaultPort = 34001,
             DefaultRPCPort = 34002,
             DefaultAPIPort = 34003,
-            PubKeyAddress = 60, // R 
-            ScriptAddress = 122, // r
-            SecretAddress = 122,
+            PubKeyAddress = 111,
+            ScriptAddress = 196,
+            SecretAddress = 239,
             GenesisTime = 1641376746,
             GenesisNonce = 7719,
             GenesisBits = 0x1F0FFFFF,

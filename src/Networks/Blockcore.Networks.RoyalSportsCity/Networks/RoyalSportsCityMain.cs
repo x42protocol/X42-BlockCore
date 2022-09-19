@@ -46,10 +46,10 @@ namespace Blockcore.Networks.RoyalSportsCity.Networks
          DefaultMaxOutboundConnections = 16;
          DefaultMaxInboundConnections = 109;
          MaxTipAge = 2 * 60 * 60;
-         MinTxFee = 1000000;
+         MinTxFee = 10000;
          MaxTxFee = Money.Coins(1).Satoshi;
-         FallbackFee = 250000;
-         MinRelayTxFee = 1000000;
+         FallbackFee = 25000;
+         MinRelayTxFee = 10000;
          MaxTimeOffsetSeconds = 25 * 60;
          DefaultBanTimeSeconds = 16000; // 500 (MaxReorg) * 64 (TargetSpacing) / 2 = 4 hours, 26 minutes and 40 seconds
 
@@ -91,9 +91,10 @@ namespace Blockcore.Networks.RoyalSportsCity.Networks
 
          var bip9Deployments = new RoyalSportsCityBIP9Deployments()
          {
-             [RoyalSportsCityBIP9Deployments.CSV] = new BIP9DeploymentsParameters("CSV", 0, BIP9DeploymentsParameters.AlwaysActive, 999999999, BIP9DeploymentsParameters.AlwaysActive),
-             [RoyalSportsCityBIP9Deployments.Segwit] = new BIP9DeploymentsParameters("Segwit", 1, BIP9DeploymentsParameters.AlwaysActive, 999999999, BIP9DeploymentsParameters.AlwaysActive),
-             [RoyalSportsCityBIP9Deployments.ColdStaking] = new BIP9DeploymentsParameters("ColdStaking", 2, BIP9DeploymentsParameters.AlwaysActive, 999999999, BIP9DeploymentsParameters.AlwaysActive),
+            [RoyalSportsCityBIP9Deployments.ColdStaking] = new BIP9DeploymentsParameters("ColdStaking", 2,
+             new DateTime(2018, 12, 1, 0, 0, 0, DateTimeKind.Utc),
+             new DateTime(2019, 12, 1, 0, 0, 0, DateTimeKind.Utc),
+             BIP9DeploymentsParameters.DefaultMainnetThreshold)
          };
 
          Consensus = new Blockcore.Consensus.Consensus(

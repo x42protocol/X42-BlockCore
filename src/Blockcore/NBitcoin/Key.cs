@@ -99,13 +99,6 @@ namespace Blockcore.NBitcoin
             return this._ECKey.Sign(hash);
         }
 
-        public SchnorrSignature SignSchnorr(uint256 hash)
-        {
-            var signer = new SchnorrSigner();
-            return signer.Sign(hash, this);
-
-        }
-
         /// <summary>
         /// Hashes and signs a message, returning the signature.
         /// </summary>

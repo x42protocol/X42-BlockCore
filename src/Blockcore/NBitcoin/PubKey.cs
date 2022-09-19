@@ -61,7 +61,7 @@ namespace Blockcore.NBitcoin
 
         private ECKey _ECKey;
 
-        internal ECKey ECKey
+        private ECKey ECKey
         {
             get
             {
@@ -165,17 +165,6 @@ namespace Blockcore.NBitcoin
         {
             Script redeem = PayToPubkeyTemplate.Instance.GenerateScriptPubKey(this);
             return new BitcoinScriptAddress(redeem.Hash, network);
-        }
-
-        public bool Verify(uint256 hash, SchnorrSignature sig)
-        {
-            if (sig == null)
-                throw new ArgumentNullException(nameof(sig));
-            if (hash == null)
-                throw new ArgumentNullException(nameof(hash));
-
-            SchnorrSigner signer = new SchnorrSigner();
-            return signer.Verify(hash, this, sig);
         }
 
         public bool Verify(uint256 hash, ECDSASignature sig)

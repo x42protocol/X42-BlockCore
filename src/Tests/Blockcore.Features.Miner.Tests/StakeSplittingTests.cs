@@ -141,8 +141,7 @@ namespace Blockcore.Features.Miner.Tests
                 coinstakeContext: coinStakeContext,
                 coinstakeOutputValue: coinstakeInputValue,
                 utxosCount: amounts.Count,
-                amountStaked: amountStaked,
-                reward: (long)reward);
+                amountStaked: amountStaked);
             return (coinstakeInputValue, transaction);
         }
 
@@ -195,8 +194,7 @@ namespace Blockcore.Features.Miner.Tests
                 coinstakeContext: coinStakeContext,
                 coinstakeOutputValue: coinstakeInputValue,
                 utxosCount: amounts.Count,
-                amountStaked: amounts.Sum(u => u.Satoshi),
-                reward: (long)reward);
+                amountStaked: amounts.Sum(u => u.Satoshi));
             return transaction;
         }
 

@@ -76,10 +76,6 @@
       "commandName": "Project",
       "commandLineArgs": "--chain=X42 -server -rpcallowip=127.0.0.1 -rpcbind=127.0.0.1 -rpcpassword=rpcpassword -rpcuser=rpcuser -testnet -dbtype=leveldb --upgradedbonversion=true"
     },
-    "XDS (MAIN)": {
-      "commandName": "Project",
-      "commandLineArgs": "--chain=XDS -server -rpcallowip=127.0.0.1 -rpcbind=127.0.0.1 -rpcpassword=rpcpassword -rpcuser=rpcuser"
-    },
     "XDS (MAIN/LOCAL)": {
       "commandName": "Project",
       "commandLineArgs": "--chain=XDS -server -rpcallowip=127.0.0.1 -rpcbind=127.0.0.1 -rpcpassword=rpcpassword -rpcuser=rpcuser  -datadir=nodedata"
@@ -203,10 +199,6 @@
     "SBC (MAIN)": {
       "commandName": "Project",
       "commandLineArgs": "--chain=SBC -server -rpcallowip=127.0.0.1 -rpcbind=127.0.0.1 -rpcpassword=rpcpassword -rpcuser=rpcuser -enableauth=0"
-    },
-    "TSBC coldstake pool (TEST)": {
-      "commandName": "Project",
-      "commandLineArgs": "--chain=SBC -server -rpcallowip=127.0.0.1 -rpcbind=127.0.0.1 -rpcpassword=rpcpassword -rpcuser=rpcuser -enableauth=0 -testnet -enforceStakingFlag=1"
     },
     "SBC (MAIN/LOCAL)": {
       "commandName": "Project",

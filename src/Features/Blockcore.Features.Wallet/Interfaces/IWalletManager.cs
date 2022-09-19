@@ -88,7 +88,6 @@ namespace Blockcore.Features.Wallet.Interfaces
         /// <returns>A mnemonic defining the wallet's seed used to generate addresses.</returns>
         Mnemonic CreateWallet(string password, string name, string passphrase = null, Mnemonic mnemonic = null, int? coinType = null, int? purpose = null);
  
-
         /// <summary>
         /// Gets the private key associated with an address in the wallet.
         /// </summary>
