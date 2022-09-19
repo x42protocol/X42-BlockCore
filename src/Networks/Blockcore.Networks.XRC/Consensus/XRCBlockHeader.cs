@@ -10,13 +10,7 @@ namespace Blockcore.Networks.XRC.Consensus
     {
         private const int X13_HASH_MINERUNCOMPATIBLE = 1;
         private const int X13_HASH_MINERCOMPATIBLE = 2;
-
-        public XRCConsensusProtocol Consensus { get; set; }
-
-        public XRCBlockHeader(XRCConsensusProtocol consensus)
-        {
-            this.Consensus = consensus;
-        }
+        private const uint XRC_X13_HASH_HARDFORK = 1541879606;
 
         public override uint256 GetHash()
         {
@@ -49,13 +43,8 @@ namespace Blockcore.Networks.XRC.Consensus
             using (var ms = new MemoryStream())
             {
                 this.ReadWriteHashingStream(new BitcoinStream(ms, true));
-                
-                if (this.Time > this.Consensus.PowDigiShieldX11Time)
-                {
-                    return XRCHashX11.Instance.Hash(this.ToBytes());
-                }
                 //block HardFork - height: 1648, time - 1541879606, hash - a75312cab7cf2a6ee89ab33bcb0ab9f96676fbc965041d50b889d9469eff6cdb 
-                else if (this.Time > this.Consensus.PowLimit2Time)
+                if (this.Time > XRC_X13_HASH_HARDFORK)
                 {
                     return XRCHashX13.Instance.Hash(this.ToBytes(), X13_HASH_MINERCOMPATIBLE);
                 }

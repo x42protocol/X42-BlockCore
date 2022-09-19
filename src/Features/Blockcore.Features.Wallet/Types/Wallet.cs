@@ -957,29 +957,9 @@ namespace Blockcore.Features.Wallet.Types
         /// <summary>
         /// A script that is used for P2SH and P2WSH scenarios (mostly used for staking).
         /// </summary>
-        /// <remarks>
-        /// Obsolete: This is kept for legacy reasons, use the the <see cref="RedeemScripts"/> property instead.
-        /// </remarks>
         [JsonProperty(PropertyName = "redeemScript")]
         [JsonConverter(typeof(ScriptJsonConverter))]
-        [ObsoleteAttribute("This is kept for legacy reasons, use the the RedeemScripts property instead.")]
-        public Script RedeemScriptObsolete { get; set; }
-
-        /// <summary>
-        /// A collection of scripts that is used for P2SH and P2WSH scenarios (mostly used for cold staking).
-        /// This solves issue https://github.com/block-core/blockcore/issues/395
-        /// </summary>
-        [JsonProperty(PropertyName = "redeemScripts")]
-        [JsonConverter(typeof(ScriptCollectionJsonConverter))]
-        public ICollection<Script> RedeemScripts { get; set; }
-
-        /// <summary>
-        /// A collection of scripts that is used for P2SH and P2WSH scenarios (mostly used for cold staking)
-        /// that can be marked as expired for staking, this is to be use together with the -enforceStakingFlag 
-        /// mainly for cold staking pools.
-        /// </summary>
-        [JsonProperty(PropertyName = "redeemScriptsExpiry")]
-        public ICollection<RedeemScriptExpiry> RedeemScriptExpiry { get; set; }
+        public Script RedeemScript { get; set; }
 
         /// <summary>
         /// A path to the address as defined in BIP44.
@@ -1035,38 +1015,6 @@ namespace Blockcore.Features.Wallet.Types
 
             return (confirmed, total - confirmed, trx.Any());
         }
-
-        /// <summary>
-        /// Check if the address path is a BIP84 segwit address.
-        /// </summary>
-        public bool IsBip84()
-        {
-            return HdOperations.GetPurpose(this.HdPath) == 84;
-        }
-
-        /// <summary>
-        /// Check if the address path is a BIP44 address.
-        /// </summary>
-        public bool IsBip44()
-        {
-            return HdOperations.GetPurpose(this.HdPath) == 44;
-        }
-    }
-
-    public class RedeemScriptExpiry
-    {
-        /// <summary>
-        /// A script that is used for P2SH and P2WSH scenarios (mostly used for staking).
-        /// </summary>
-        [JsonProperty(PropertyName = "redeemScript")]
-        [JsonConverter(typeof(ScriptJsonConverter))]
-        public Script RedeemScript { get; set; }
-
-        /// <summary>
-        /// Specify whether UTXOs associated with this address is within the allowed staking time.
-        /// </summary>
-        [JsonProperty(PropertyName = "stakingExpiry", NullValueHandling = NullValueHandling.Ignore)]
-        public DateTime? StakingExpiry { get; set; }
     }
 
     /// <summary>

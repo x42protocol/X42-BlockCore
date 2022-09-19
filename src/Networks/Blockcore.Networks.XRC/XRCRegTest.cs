@@ -14,7 +14,7 @@ using NBitcoin.Protocol;
 
 namespace Blockcore.Networks.XRC
 {
-    public class XRCRegTest : XRCNetwork
+    public class XRCRegTest : XRCMain
     {
         public XRCRegTest()
         {
@@ -36,14 +36,14 @@ namespace Blockcore.Networks.XRC
             this.DefaultMaxInboundConnections = 109;
             this.DefaultRPCPort = 16661;
             this.DefaultAPIPort = 16669;
-            this.MaxTipAge = 604800;
+            this.MaxTipAge = xRhodiumDefaultMaxTipAgeInSeconds;
             this.MinTxFee = 1000;
             this.MaxTxFee = Money.Coins(1).Satoshi;
             this.FallbackFee = 20000;
             this.MinRelayTxFee = 1000;
-            this.RootFolderName = "xrhodium";
-            this.DefaultConfigFilename = "xrhodium.conf";
-            this.MaxTimeOffsetSeconds = 25 * 60;
+            this.RootFolderName = xRhodiumRootFolderName;
+            this.DefaultConfigFilename = xRhodiumDefaultConfigFilename;
+            this.MaxTimeOffsetSeconds = xRhodiumMaxTimeOffsetSeconds;
             this.CoinTicker = "XRC";
             this.DefaultBanTimeSeconds = 16000; // 500 (MaxReorg) * 64 (TargetSpacing) / 2 = 4 hours, 26 minutes and 40 seconds
 
@@ -57,6 +57,9 @@ namespace Blockcore.Networks.XRC
             this.GenesisReward = Money.Zero;
 
             var pubKeyMain = "2103d1b6cd5f956ccedf5877c89843a438bfb800468133fb2e73946e1452461a9b1aac";
+            Block genesisBlock = CreateXRCGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion, pubKeyMain);
+
+            this.Genesis = genesisBlock;
 
             var consensusOptions = new PosConsensusOptions
             {
@@ -76,23 +79,16 @@ namespace Blockcore.Networks.XRC
                 [BuriedDeployments.BIP66] = 0
             };
 
-            consensusFactory.Protocol = new XRCConsensusProtocol()
+            consensusFactory.Protocol = new ConsensusProtocol()
             {
                 ProtocolVersion = ProtocolVersion.FEEFILTER_VERSION,
                 MinProtocolVersion = ProtocolVersion.POS_PROTOCOL_VERSION,
-                PowLimit2Time = 0,
-                PowLimit2Height = 0,
-                PowDigiShieldX11Height = 0,
-                PowDigiShieldX11Time = 0
             };
-
-            Block genesisBlock = CreateXRCGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion, pubKeyMain);
-            this.Genesis = genesisBlock;
 
             this.Consensus = new XRCConsensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
-                coinType: (int)XRCCoinType.CoinTypes.XRCReg,
+                coinType: 1,
                 hashGenesisBlock: genesisBlock.GetHash(),
                 subsidyHalvingInterval: 210000,
                 majorityEnforceBlockUpgrade: 750,
@@ -101,21 +97,23 @@ namespace Blockcore.Networks.XRC
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: new XRCBIP9Deployments(),
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
-                minerConfirmationWindow: 2016,
+                minerConfirmationWindow: 2016, // nPowTargetTimespan / nPowTargetSpacing  
                 maxReorgLength: 0,
-                defaultAssumeValid: null,
+                defaultAssumeValid: null, // 1600000 
                 maxMoney: 2100000 * Money.COIN,
                 coinbaseMaturity: 6,
                 premineHeight: 1,
                 premineReward: new Money(1050000 * Money.COIN),
                 proofOfWorkReward: Money.Coins((decimal)2.5),
-                targetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60),
+                targetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
                 targetSpacing: TimeSpan.FromSeconds(10 * 60),
                 powAllowMinDifficultyBlocks: true,
                 posNoRetargeting: true,
                 powNoRetargeting: false,
                 powLimit: new Target(new uint256("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
                 powLimit2: new Target(new uint256("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
+                powLimit2Time: 0,
+                powLimit2Height: 0,
                 minimumChainWork: uint256.Zero,
                 isProofOfStake: false,
                 lastPowBlock: default(int),

@@ -236,8 +236,6 @@ namespace Blockcore.Features.ColdStaking
                     services.RemoveSingleton<IWalletManager>();
                     services.AddSingleton<IWalletManager, ColdStakingManager>();
                     services.AddSingleton<INavigationItem, ColdStakingNavigationItem>();
-                    services.AddSingleton<INavigationItem, ColdStakePoolNavigationItem>();
-
                 });
             });
 
