@@ -1056,6 +1056,7 @@ namespace x42.Features.xServer
                     peer.Version = pingData.Version;
                     peer.ResponseTime = pingResponseTime.ElapsedMilliseconds;
                     peer.Tier = pingData.Tier;
+                    peer.PublicKey = pingData.PublicKey;
                     SyncPeerToPeersList(xServerPeerList, peer);
                 }
                 else
@@ -1108,8 +1109,9 @@ namespace x42.Features.xServer
                                     Priority = xServer.Priotiry,
                                     Version = ping.Version,
                                     ResponseTime = pingResponseTime.ElapsedMilliseconds,
-                                    Tier = ping.Tier
-                                };
+                                    Tier = ping.Tier,
+                                    PublicKey = ping.PublicKey
+                            };
                                 SyncPeerToPeersList(xServerPeerList, newPeer);
                             }
                         }

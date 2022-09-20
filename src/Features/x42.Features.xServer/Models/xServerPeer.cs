@@ -17,5 +17,7 @@
         public long ResponseTime { get; set; }
 
         public int Tier { get; set; }
+
+        public string PublicKey { get; set; }
     }
 }
