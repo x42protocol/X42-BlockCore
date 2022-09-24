@@ -11,6 +11,8 @@ using Blockcore.Utilities;
 using x42.Features.xServer.Interfaces;
 using System.Linq;
 using Blockcore.Features.NodeHost.Hubs;
+using System;
+
 [assembly: InternalsVisibleTo("x42.Features.xServer.Tests")]
 
 namespace x42.Features.xServer
@@ -66,11 +68,13 @@ namespace x42.Features.xServer
                 {
                     peerName = $"{peerName.Substring(0, MaximumProfileNameLength)}...";
                 }
-                builder.AppendLine(
-                    ($"{peerName} ({tier}): {peer.NetworkAddress}:{peer.NetworkPort}").PadRight(LoggingConfiguration.ColumnLength + 30)
-                    + ($"Response Time: {responseTime}").PadRight(LoggingConfiguration.ColumnLength + 14)
-                    + ($"Version: {peer.Version}").PadRight(LoggingConfiguration.ColumnLength + 7)
-                    );
+
+                Console.WriteLine("");
+                Console.WriteLine($"{peerName} ({tier}): {peer.NetworkAddress}:{peer.NetworkPort}");
+                Console.Write($"Response Time: {responseTime}".PadRight(LoggingConfiguration.ColumnLength + 14));
+                Console.Write($"Version: {peer.Version}".PadRight(LoggingConfiguration.ColumnLength + 14));
+                Console.WriteLine($"PubKey: {peer.PublicKey}".PadRight(LoggingConfiguration.ColumnLength + 14));
+ 
             }
 
             log.AppendLine(builder.ToString());
