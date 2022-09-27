@@ -504,6 +504,29 @@ namespace x42.Features.xServer
             return result;
         }
 
+
+        public async Task RelayPriceLock(PriceLockResult priceLockData)
+        {
+            var taskList = new List<Task>();
+
+            var allNodes = this.xServerPeerList.GetPeers();
+            foreach (var node in allNodes)
+            {
+                string xServerURL = Utils.GetServerUrl(node.NetworkProtocol, node.NetworkAddress, node.NetworkPort);
+                var client = new RestClient(xServerURL);
+                client.UseNewtonsoftJson();
+                var createPriceLockRequest = new RestRequest("/updatelock", Method.Post);
+
+                createPriceLockRequest.AddBody(priceLockData);
+
+
+                taskList.Add(client.ExecuteAsync<PriceLockResult>(createPriceLockRequest));
+            }
+
+            Task.WaitAll(taskList.ToArray());
+
+        }
+
         /// <inheritdoc />
         public PriceLockResult CreatePriceLock(CreatePriceLockRequest priceLockRequest)
         {

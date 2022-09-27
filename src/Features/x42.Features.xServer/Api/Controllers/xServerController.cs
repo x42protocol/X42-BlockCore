@@ -208,6 +208,7 @@ namespace x42.Features.xServer.Api.Controllers
             try
             {
                 var result = this.xServerManager.CreatePriceLock(priceLockRequest);
+                this.xServerManager.RelayPriceLock(result);
                 return Json(result);
             }
             catch (Exception e)

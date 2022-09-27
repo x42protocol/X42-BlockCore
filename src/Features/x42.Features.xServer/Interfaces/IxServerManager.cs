@@ -74,5 +74,6 @@ namespace x42.Features.xServer.Interfaces
         ReserveWordPressResult ReserveWordpressPreviewDomain(WordPressReserveRequest wordpressrequest);
         Task<List<string>> GetWordPressPreviewDomainsAsync();
         Task ProvisionWordPressAsync(ProvisionWordPressRequest provisionWordPressRequest);
+        Task RelayPriceLock(PriceLockResult priceLockData);
     }
 }
