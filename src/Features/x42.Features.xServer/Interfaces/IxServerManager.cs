@@ -75,5 +75,6 @@ namespace x42.Features.xServer.Interfaces
         Task<List<string>> GetWordPressPreviewDomainsAsync();
         Task ProvisionWordPressAsync(ProvisionWordPressRequest provisionWordPressRequest);
         Task RelayPriceLock(PriceLockResult priceLockData);
+        Task UpdatexServer(xServerProvisioningRequest request);
     }
 }
