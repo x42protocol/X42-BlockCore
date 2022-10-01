@@ -83,6 +83,15 @@ namespace x42.Features.xServer.Api.Controllers
      
         }
 
+        [Route("updatexServer")]
+        [HttpPost]
+        public async Task<IActionResult> UpdatexServer([FromBody] xServerProvisioningRequest request)
+        {
+
+            await this.xServerManager.UpdatexServer(request);
+            return Ok();
+
+        }
 
         /// <summary>
         ///     Searches for the xServer by profile name or sign address.
@@ -97,7 +106,7 @@ namespace x42.Features.xServer.Api.Controllers
             return Ok(connected);
 
         }
-
+         
 
         /// <summary>
         ///     Searches for the xServer by profile name or sign address.

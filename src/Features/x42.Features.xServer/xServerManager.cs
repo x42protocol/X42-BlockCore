@@ -208,7 +208,7 @@ namespace x42.Features.xServer
 
                 }
 
-                if(!(await UpdateProfileDNSAsync(new ProfileDnsUpdateRequest() { Ip = request.IpAddress, Profile = request.Profile })))
+                if (!(await UpdateProfileDNSAsync(new ProfileDnsUpdateRequest() { Ip = request.IpAddress, Profile = request.Profile })))
                 {
 
                     await this.nodeHub.Echo("An Error has Occured");
@@ -224,7 +224,7 @@ namespace x42.Features.xServer
                 ReplaceVariable("app.config.json", "profile", request.Profile.ToLower());
                 ReplaceVariable("xServer.conf", "postgrespass", request.DatabasePassword);
 
-    
+
 
                 await this.nodeHub.Echo("Connecting via ssh...");
 
@@ -315,19 +315,111 @@ namespace x42.Features.xServer
             {
                 this.logger.LogError(e.Message);
                 await this.nodeHub.Echo(e.Message);
-                 
+
 
             }
 
 
-             
+
 
 
         }
 
+        public async Task UpdatexServer(xServerProvisioningRequest request)
+        {
+            await this.nodeHub.Echo(" ");
+            await this.nodeHub.Echo("*******************************************");
+            await this.nodeHub.Echo("Welcome to the xServer updater tool!");
+            await this.nodeHub.Echo("*******************************************");
+            await this.nodeHub.Echo(" ");
+            try
+            {
+                var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                var configPath = Path.Combine(appDataFolder, "Config");
+                var configExists = Directory.Exists(configPath);
+                if (!configExists)
+                {
+                    Directory.CreateDirectory(configPath);
+                }
+
+                await this.nodeHub.Echo("Connecting via ssh...");
+
+                var commndList = new List<Models.SshCommand>();
+
+                commndList.Add(new Models.SshCommand() { Command = "cd ./x42-Server-Deployment/xserver && docker-compose down", Description = "Docker Compose Down" });
+                commndList.Add(new Models.SshCommand() { Command = "rm -f ./x42-Server-Deployment/traefik/letsencrypt/acme.json", Description = "Removing acme.json" });
+                commndList.Add(new Models.SshCommand() { Command = "rm -f ./x42-Server-Deployment/xserver/.env", Description = "Remove .env" });
+                commndList.Add(new Models.SshCommand() { Command = "rm -f ./x42-Server-Deployment/xserver/docker-compose.yaml", Description = "Removing docker-compose.yaml" });
+                commndList.Add(new Models.SshCommand() { Command = "cd ./x42-Server-Deployment/ && git pull", Description = "git pull" });
+                commndList.Add(new Models.SshCommand() { Command = "rm -r ./var/x42", Description = "Clear Database" });
+                commndList.Add(new Models.SshCommand() { Command = "rm -r ./x42-Server-Deployment/xserver/xcore/x42Main/txdb", Description = "Deleting txdb" });
+                commndList.Add(new Models.SshCommand() { Command = "rm -r ./x42-Server-Deployment/xserver/xcore/x42Main/provenheaders", Description = "Delete provenheaders" });
+                commndList.Add(new Models.SshCommand() { Command = "rm -r ./x42-Server-Deployment/xserver/xcore/x42Main/logs", Description = "Deleting logs" });
+                commndList.Add(new Models.SshCommand() { Command = "rm -r ./x42-Server-Deployment/xserver/xcore/x42Main/common", Description = "Deleting common" });
+                commndList.Add(new Models.SshCommand() { Command = "rm -r ./x42-Server-Deployment/xserver/xcore/x42Main/coindb", Description = "Deleting coindb" });
+                commndList.Add(new Models.SshCommand() { Command = "rm -r ./x42-Server-Deployment/xserver/xcore/x42Main/chain", Description = "Deleting chain" });
+                commndList.Add(new Models.SshCommand() { Command = "rm -r ./x42-Server-Deployment/xserver/xcore/x42Main/blocks", Description = "Deleting blocks" });
+                commndList.Add(new Models.SshCommand() { Command = "rm -f ./x42-Server-Deployment/xserver/xcore/x42Main/addressindex.litedb", Description = "Deleting addressindex" });
+                commndList.Add(new Models.SshCommand() { Command = "cd x42-Server-Deployment/xserver && docker-compose up", Description = "Docker Compose Up" });
+
+                await this.nodeHub.Echo("SSH Connection success!");
+                await this.nodeHub.Echo("Updating xServer...");
+
+                using (var sftp = new SftpClient(request.IpAddress, request.SshUser, request.SsHPassword))
+                {
+                    sftp.Connect();
+                    DownloadEnv(sftp);
+                    sftp.Disconnect();
+
+                }     
+
+                var scopedSshManager = new SshManager(request.IpAddress, request.SshUser, request.SsHPassword, this.nodeHub);
+
+                foreach (var commandItem in commndList)
+                {
+                    await this.nodeHub.Echo($"{commandItem.Description}...");
+                    await scopedSshManager.ExecuteCommand(commandItem.Command);
+
+                }
+
+                UpdateEnvFile();
+
+
+
+                using (var sftp = new SftpClient(request.IpAddress, request.SshUser, request.SsHPassword))
+                {
+                    sftp.Connect();
+
+                    var x42MainFolder = appDataFolder + "\\Blockcore\\x42\\x42Main";
+
+
+                    string pathString = Path.Combine(x42MainFolder, "tmp");
+
+                    using (FileStream filestream = File.OpenRead(Path.Combine(pathString, ".env")))
+                    {
+                        sftp.UploadFile(filestream, "/" + "/root/x42-Server-Deployment/xserver/.env", null);
+
+                    }
+                    
+
+                    sftp.Disconnect();
+
+                }
+
+                await this.nodeHub.Echo("xServer Update Complete!");
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError(e.Message);
+                await this.nodeHub.Echo(e.Message);
+            }
+
+        }
+
+
         private static void CopyConfigFiles(string fileName)
         {
-            var x42MainFolder = Path.Combine(Environment.CurrentDirectory,"resources", "daemon", "AppData");
+            var x42MainFolder = Path.Combine(Environment.CurrentDirectory, "resources", "daemon", "AppData");
             var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
 
@@ -339,7 +431,8 @@ namespace x42.Features.xServer
             }
             string sourceFile = Path.Combine(x42MainFolder, fileName);
             string desitinationFile = Path.Combine(appDataFolder, "Config", fileName);
-            if (File.Exists(desitinationFile)) {
+            if (File.Exists(desitinationFile))
+            {
 
                 File.Delete(desitinationFile);
             }
@@ -352,11 +445,12 @@ namespace x42.Features.xServer
             var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
             string pathString = Path.Combine(appDataFolder, "Config", fileName);
-             
+
 
             string text = File.ReadAllText(pathString);
             text = text.Replace("{" + variable + "}", value);
-            if (File.Exists(pathString)) {
+            if (File.Exists(pathString))
+            {
                 File.Delete(pathString);
             }
             File.WriteAllText(pathString, text);
@@ -384,7 +478,7 @@ namespace x42.Features.xServer
             var x42MainFolder = appDataFolder + "\\Blockcore\\x42\\x42Main";
 
 
-            string pathString = Path.Combine(x42MainFolder,"certificates");
+            string pathString = Path.Combine(x42MainFolder, "certificates");
 
             if (!Directory.Exists(pathString))
             {
@@ -399,6 +493,55 @@ namespace x42.Features.xServer
 
 
 
+        }
+        private static void DownloadEnv(SftpClient sftp)
+        {
+            var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var x42MainFolder = appDataFolder + "\\Blockcore\\x42\\x42Main";
+
+
+            string pathString = Path.Combine(x42MainFolder, "tmp");
+
+            if (!Directory.Exists(pathString))
+            {
+
+                Directory.CreateDirectory(pathString);
+
+            }
+            using (Stream file1 = File.OpenWrite(pathString + "\\.env"))
+            {
+                sftp.DownloadFile("/root/x42-Server-Deployment/xserver/.env", file1);
+            }
+
+        }
+
+        private void UpdateEnvFile() {
+
+
+            var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var x42MainFolder = appDataFolder + "\\Blockcore\\x42\\x42Main";
+
+            int counter = 0;
+
+            string pathString = Path.Combine(x42MainFolder, "tmp");
+            var password = "";
+            foreach (string line in File.ReadLines(pathString + "\\.env"))
+            {
+                Console.WriteLine(line);
+                if (line.Contains("POSTGRES_PASSWORD="))
+                {
+
+                    password = line.Replace("POSTGRES_PASSWORD=", "");
+                }
+
+                counter++;
+            }
+            using (StreamWriter w = File.AppendText(pathString + "\\.env"))
+            {
+                w.WriteLine();
+                w.WriteLine("MONGOCONNECTIONSTRING=mongodb://xroot:" + password + "@xDocumentStore:27017");
+                w.WriteLine("MONGODBNAME=xServerDb");
+            }
         }
 
         /// <inheritdoc />
@@ -816,11 +959,11 @@ namespace x42.Features.xServer
                 {
                     return true;
                 }
-                
+
             }
             return false;
-            
-         }
+
+        }
 
         public ReserveWordPressResult ReserveWordpressPreviewDomain(WordPressReserveRequest wordpressrequest)
         {
@@ -883,7 +1026,7 @@ namespace x42.Features.xServer
         public async Task ProvisionWordPressAsync(ProvisionWordPressRequest provisionWordPressRequest)
         {
 
-    
+
             var result = new ReserveWordPressResult();
             var t2Node = this.xServerPeerList.GetPeers().Where(n => n.Tier == (int)TierLevel.Two && n.NetworkAddress.Contains("144.91.95.234")).OrderBy(n => n.ResponseTime).FirstOrDefault();
             if (t2Node != null)
@@ -901,7 +1044,7 @@ namespace x42.Features.xServer
                     Timeout = 120000  // 1 second. or whatever time you want.
                 };
                 var client = new RestClient(options);
-                 
+
 
                 client.UseNewtonsoftJson();
                 var reserveWordPressRequest = new RestRequest("/provisionWordPress", Method.Post);
@@ -1134,7 +1277,7 @@ namespace x42.Features.xServer
                                     ResponseTime = pingResponseTime.ElapsedMilliseconds,
                                     Tier = ping.Tier,
                                     PublicKey = ping.PublicKey
-                            };
+                                };
                                 SyncPeerToPeersList(xServerPeerList, newPeer);
                             }
                         }
