@@ -69,11 +69,11 @@ namespace x42.Features.xServer
                     peerName = $"{peerName.Substring(0, MaximumProfileNameLength)}...";
                 }
 
-                Console.WriteLine("");
-                Console.WriteLine($"{peerName} ({tier}): {peer.NetworkAddress}:{peer.NetworkPort}");
-                Console.Write($"Response Time: {responseTime}".PadRight(LoggingConfiguration.ColumnLength + 14));
-                Console.Write($"Version: {peer.Version}".PadRight(LoggingConfiguration.ColumnLength + 14));
-                Console.WriteLine($"PubKey: {peer.PublicKey}".PadRight(LoggingConfiguration.ColumnLength + 14));
+                builder.AppendLine("");
+                builder.AppendLine($"{peerName} ({tier}): {peer.NetworkAddress}:{peer.NetworkPort}");
+                builder.Append($"Response Time: {responseTime}".PadRight(LoggingConfiguration.ColumnLength + 14));
+                builder.Append($"Version: {peer.Version}".PadRight(LoggingConfiguration.ColumnLength + 14));
+                builder.AppendLine($"PubKey: {peer.PublicKey}".PadRight(LoggingConfiguration.ColumnLength + 14));
  
             }
 
