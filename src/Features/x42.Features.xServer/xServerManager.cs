@@ -1053,9 +1053,14 @@ namespace x42.Features.xServer
                 if (pingResult.StatusCode == HttpStatusCode.OK)
                 {
                     var pingData = pingResult.Data;
-                    peer.Version = pingData.Version;
+                    if (pingData != null)
+                    {
+                        peer.Version = pingData?.Version;
+                        peer.Tier = pingData.Tier;
+                    }
+
                     peer.ResponseTime = pingResponseTime.ElapsedMilliseconds;
-                    peer.Tier = pingData.Tier;
+
                     SyncPeerToPeersList(xServerPeerList, peer);
                 }
                 else
