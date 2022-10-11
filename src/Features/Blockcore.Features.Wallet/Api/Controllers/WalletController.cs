@@ -5,9 +5,12 @@ using System.Linq;
 using System.Net;
 using System.Security;
 using System.Text;
+using System.Threading.Tasks;
 using Blockcore.Connection;
 using Blockcore.Connection.Broadcasting;
+using Blockcore.Consensus;
 using Blockcore.Consensus.Chain;
+using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Features.BlockStore.Models;
 using Blockcore.Features.Wallet.Api.Models;
@@ -63,6 +66,14 @@ namespace Blockcore.Features.Wallet.Api.Controllers
         /// <summary>Provider of date time functionality.</summary>
         private readonly IDateTimeProvider dateTimeProvider;
 
+        private readonly IConsensusManager consensusManager;
+
+        private readonly IBlockStore blockStore;
+
+        private static string newTxHash = "";
+
+        private readonly IMultisigManager multisigManager;
+
         public WalletController(
             ILoggerFactory loggerFactory,
             IWalletManager walletManager,
@@ -72,7 +83,10 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             Network network,
             ChainIndexer chainIndexer,
             IBroadcasterManager broadcasterManager,
-            IDateTimeProvider dateTimeProvider)
+            IDateTimeProvider dateTimeProvider,
+            IConsensusManager consensusManager,
+            IBlockStore blockStore,
+            IMultisigManager multisigManager)
         {
             this.walletManager = walletManager;
             this.walletTransactionHandler = walletTransactionHandler;
@@ -84,6 +98,9 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.broadcasterManager = broadcasterManager;
             this.dateTimeProvider = dateTimeProvider;
+            this.consensusManager = consensusManager;
+            this.blockStore = blockStore;
+            this.multisigManager = multisigManager;
         }
 
         /// <summary>
@@ -954,7 +971,58 @@ namespace Blockcore.Features.Wallet.Api.Controllers
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
             }
         }
-        
+
+
+
+
+        [Route("fund-multi-sig")]
+        [HttpPost]
+        public async Task<IActionResult> FundMultisig(FundMultisigInput input)
+        {
+            var result = await this.multisigManager.FundMultisigAsync(input);
+
+            return Ok(result);
+
+        }
+
+
+
+        [Route("fund-multisig")]
+        [HttpPost]
+        public async Task<IActionResult> FundMultiSigAsync(FundMultisigInput input)
+        {
+            var result = await this.multisigManager.FundMultisigAsync(input);
+            return Ok(result);
+
+        }
+
+        [Route("create-unsigned-multisig")]
+        [HttpPost]
+        public async Task<IActionResult> CreateUnsignedMultisigPaymentAsync(SpendMultisigInput input)
+        {
+            var result = await this.multisigManager.CreateUnsignedMultisigPayment(input);
+            return Ok(result);
+
+        }
+
+        [Route("sign-multisig-payment")]
+        [HttpPost]
+        public async Task<IActionResult> SignMultisigPaymentAsync(PartiallySignedMultisigInput input)
+        {
+            var result = await this.multisigManager.SignMultisigPaymentAsync(input);
+            return Ok(result);
+
+        }
+
+        [Route("build-signed-transaction")]
+        [HttpPost]
+        public async Task<IActionResult> BuildFullySignedTransactionAsync(BuildFullySignedTransactionInput input)
+        {
+            var result = await this.multisigManager.BuildFullySignedTransactionAsync(input);
+            return Ok(result);
+
+        }
+
 
         /// <summary>
         /// Lists all the files found in the default wallet folder.
@@ -1682,7 +1750,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
                 var responseModel = this.walletManager.Sweep(request.PrivateKeys, request.DestinationAddress, request.Broadcast);
                 return this.Json(responseModel);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 this.logger.LogError("Exception occurred: {0}", e.ToString());
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
@@ -1712,6 +1780,6 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             {
                 return (null, false);
             }
-        }        
+        }
     }
 }
