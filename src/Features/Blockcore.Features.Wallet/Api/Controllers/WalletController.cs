@@ -1011,21 +1011,10 @@ namespace Blockcore.Features.Wallet.Api.Controllers
         public async Task<IActionResult> FundMultisig(FundMultisigInput input)
         {
             var result = await this.multisigManager.FundMultisigAsync(input);
-
             return Ok(result);
-
         }
 
 
-
-        [Route("fund-multisig")]
-        [HttpPost]
-        public async Task<IActionResult> FundMultiSigAsync(FundMultisigInput input)
-        {
-            var result = await this.multisigManager.FundMultisigAsync(input);
-            return Ok(result);
-
-        }
 
         [Route("create-unsigned-multisig")]
         [HttpPost]
