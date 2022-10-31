@@ -14,6 +14,7 @@ using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Features.BlockStore.Models;
 using Blockcore.Features.Wallet.Api.Models;
+using Blockcore.Features.Wallet.Api.Models.XDocuments;
 using Blockcore.Features.Wallet.Exceptions;
 using Blockcore.Features.Wallet.Interfaces;
 using Blockcore.Features.Wallet.Types;
@@ -73,6 +74,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
         private static string newTxHash = "";
 
         private readonly IMultisigManager multisigManager;
+        private readonly IXDocumentManager _xDocumentManager;
 
         public WalletController(
             ILoggerFactory loggerFactory,
@@ -86,7 +88,8 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             IDateTimeProvider dateTimeProvider,
             IConsensusManager consensusManager,
             IBlockStore blockStore,
-            IMultisigManager multisigManager)
+            IMultisigManager multisigManager,
+            IXDocumentManager xDocumentManager)
         {
             this.walletManager = walletManager;
             this.walletTransactionHandler = walletTransactionHandler;
@@ -101,6 +104,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             this.consensusManager = consensusManager;
             this.blockStore = blockStore;
             this.multisigManager = multisigManager;
+            this._xDocumentManager = xDocumentManager;
         }
 
         /// <summary>
@@ -1724,6 +1728,24 @@ namespace Blockcore.Features.Wallet.Api.Controllers
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
             }
         }
+
+
+        [HttpPost]
+        [Route("create-x-document")]
+        public async Task<IActionResult> CreateXDocument([FromBody] XDocumentCreateModel input)
+        {
+            try
+            {
+                var result = await this._xDocumentManager.CreateDocument(input);
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+
 
         /// <summary>
         /// Sweeps one or more private keys to another address.

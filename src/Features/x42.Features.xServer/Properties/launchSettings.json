@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "x42.Features.xServer": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

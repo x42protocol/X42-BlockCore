@@ -172,8 +172,9 @@ namespace Blockcore.Features.Wallet
                         services.AddSingleton<INavigationItem, WalletNavigationItem>();
                         services.AddSingleton<IClientEventBroadcaster, WalletInfoBroadcaster>();
                         services.AddSingleton<IMultisigManager, MultisigManager>();
+                        services.AddSingleton<IXDocumentManager, XDocumentManager>();
 
-                        
+
                     });
             });
 

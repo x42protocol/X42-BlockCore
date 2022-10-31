@@ -8,6 +8,7 @@ using x42.Features.xServer.Interfaces;
 using x42.Features.xServer.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Blockcore.Features.Wallet;
 
 namespace x42.Features.xServer.Api.Controllers
 {
@@ -26,15 +27,25 @@ namespace x42.Features.xServer.Api.Controllers
         private readonly IxServerManager xServerManager;
 
         /// <summary>
+        ///     Manager for 
+        /// </summary>
+        /// 
+
+        private readonly IXDocumentManager _xDocumentManager;
+
+        /// <summary>
         ///     Constructor for the xServer contoller
         /// </summary>
-        public xServerController(ILoggerFactory loggerFactory, IxServerManager xServerManager)
+        /// 
+
+        public xServerController(ILoggerFactory loggerFactory, IxServerManager xServerManager, IXDocumentManager xDocumentManager)
         {
             Guard.NotNull(loggerFactory, nameof(loggerFactory));
             Guard.NotNull(xServerManager, nameof(IxServerManager));
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.xServerManager = xServerManager;
+            this._xDocumentManager = xDocumentManager;
         }
 
         /// <summary>
@@ -363,5 +374,6 @@ namespace x42.Features.xServer.Api.Controllers
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
             }
         }
+
     }
 }
