@@ -12,6 +12,7 @@ using System.Linq;
 using Blockcore.Networks;
 using Blockcore.Features.NodeHost.Hubs;
 using System;
+using Blockcore.Features.Wallet;
 
 [assembly: InternalsVisibleTo("x42.Features.xServer.Tests")]
 
@@ -133,7 +134,8 @@ namespace x42.Features.xServer
                         services.AddSingleton<xServerSettings>();
                         services.AddSingleton<IxServerManager, xServerManager>();
                         services.AddSingleton<NodeHub, NodeHub>();
-                        services.AddScoped<ISshManager, SshManager>();
+                        services.AddSingleton<ISshManager, SshManager>();
+                        services.AddSingleton<IXDocumentManager, XDocumentManager>();
 
                     });
             });

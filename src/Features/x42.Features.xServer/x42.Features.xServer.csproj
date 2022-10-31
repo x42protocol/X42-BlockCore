@@ -22,6 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Blockcore\Blockcore.csproj" />
     <ProjectReference Include="..\Blockcore.Features.NodeHost\Blockcore.Features.NodeHost.csproj" />
+    <ProjectReference Include="..\Blockcore.Features.Wallet\Blockcore.Features.Wallet.csproj" />
   </ItemGroup>
   
   <ItemGroup>
