@@ -23,6 +23,10 @@ using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json.Serialization;
 using Renci.SshNet;
 using System.Threading;
+using Polly.Retry;
+using Polly;
+using System.Xml.Linq;
+using x42.Features.xServer.Models.DNS;
 
 namespace x42.Features.xServer
 {
@@ -371,7 +375,7 @@ namespace x42.Features.xServer
                     DownloadEnv(sftp);
                     sftp.Disconnect();
 
-                }     
+                }
 
                 var scopedSshManager = new SshManager(request.IpAddress, request.SshUser, request.SsHPassword, this.nodeHub);
 
@@ -400,7 +404,7 @@ namespace x42.Features.xServer
                         sftp.UploadFile(filestream, "/" + "/root/x42-Server-Deployment/xserver/.env", null);
 
                     }
-                    
+
 
                     sftp.Disconnect();
 
@@ -515,9 +519,8 @@ namespace x42.Features.xServer
 
         }
 
-        private void UpdateEnvFile() {
-
-
+        private void UpdateEnvFile()
+        {
             var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var x42MainFolder = appDataFolder + "\\Blockcore\\x42\\x42Main";
 
@@ -755,36 +758,59 @@ namespace x42.Features.xServer
         }
 
         /// <inheritdoc />
-        public SubmitPaymentResult SubmitPayment(SubmitPaymentRequest submitPaymentRequest)
+        public async Task<SubmitPaymentResult> SubmitPayment(SubmitPaymentRequest submitPaymentRequest)
         {
             var result = new SubmitPaymentResult();
-            var t3Node = this.xServerPeerList.GetPeers().Where(n => n.Tier == (int)TierLevel.Three).OrderBy(n => n.ResponseTime).FirstOrDefault();
-            if (t3Node != null)
-            {
-                string xServerURL = Utils.GetServerUrl(t3Node.NetworkProtocol, t3Node.NetworkAddress, t3Node.NetworkPort);
-                var client = new RestClient(xServerURL);
-                client.UseNewtonsoftJson();
-                var paymentRequest = new RestRequest("/submitpayment", Method.Post);
-                paymentRequest.AddBody(submitPaymentRequest);
+            var t3Nodes = this.xServerPeerList.GetPeers().Where(n => n.Tier == (int)TierLevel.Three).OrderBy(n => n.ResponseTime).ToList();
 
-                var submitPaymentResult = client.ExecuteAsync<SubmitPaymentResult>(paymentRequest).Result;
-                if (submitPaymentResult.StatusCode == HttpStatusCode.OK)
+            var retry = 0;
+
+
+            if (t3Nodes.Count > 0)
+            {
+                retry++;
+
+                foreach (var t3Node in t3Nodes)
                 {
-                    result = submitPaymentResult.Data;
-                }
-                else
-                {
-                    var errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(submitPaymentResult.Content);
-                    if (errorResponse != null)
+                    string xServerURL = Utils.GetServerUrl(t3Node.NetworkProtocol, t3Node.NetworkAddress, t3Node.NetworkPort);
+                    var client = new RestClient(xServerURL);
+                    client.UseNewtonsoftJson();
+                    var paymentRequest = new RestRequest("/submitpayment", Method.Post);
+                    paymentRequest.AddBody(submitPaymentRequest);
+
+                    var submitPaymentResult = await client.ExecuteAsync<SubmitPaymentResult>(paymentRequest);
+
+                    if (submitPaymentResult.StatusCode == HttpStatusCode.OK)
                     {
-                        result.ResultMessage = errorResponse.errors[0].message;
+                        result = submitPaymentResult.Data;
                     }
                     else
                     {
-                        result.ResultMessage = "Failed to access xServer";
+                        var errorResponse = JsonConvert.DeserializeObject<ErrorResponse>(submitPaymentResult.Content);
+                        if (errorResponse != null)
+                        {
+                            result.ResultMessage = errorResponse.errors[0].message;
+                        }
+                        else
+                        {
+                            result.ResultMessage = "Failed to access xServer";
+                        }
+                        result.Success = false;
                     }
-                    result.Success = false;
+                    if (result.Success)
+                    {
+                        break;
+                    }
                 }
+
+
+
+
+
+
+
+
+
             }
             else
             {
@@ -792,6 +818,63 @@ namespace x42.Features.xServer
             }
             return result;
         }
+
+        public List<string> GetZonesByKeyAddress(string keyAddress)
+        {
+
+            var result = new List<string>();
+
+            var t3Node = this.xServerPeerList.GetPeers().Where(n => n.Tier == (int)TierLevel.Three).OrderBy(n => n.ResponseTime).FirstOrDefault();
+
+
+            string xServerURL = Utils.GetServerUrl(t3Node.NetworkProtocol, t3Node.NetworkAddress, t3Node.NetworkPort);
+
+
+#if DEBUG
+            xServerURL = "http://localhost:4242/";
+#endif
+
+ 
+            var client = new RestClient(xServerURL);
+            client.UseNewtonsoftJson();
+
+            var getZoneListRequest = new RestRequest("/zones-by-key-address", Method.Get);
+            getZoneListRequest.AddParameter("keyAddress", keyAddress);
+
+            var response = client.ExecuteAsync<List<string>>(getZoneListRequest).Result;
+
+            return response.Data;
+
+
+        }
+
+        public ZoneDataModel GetZoneRecords(string zone)
+        {
+
+            var result = new List<string>();
+
+            var t3Node = this.xServerPeerList.GetPeers().Where(n => n.Tier == (int)TierLevel.Three).OrderBy(n => n.ResponseTime).FirstOrDefault();
+
+
+            string xServerURL = Utils.GetServerUrl(t3Node.NetworkProtocol, t3Node.NetworkAddress, t3Node.NetworkPort);
+
+#if DEBUG
+            xServerURL = "http://localhost:4242/";
+#endif
+
+            var client = new RestClient(xServerURL);
+            client.UseNewtonsoftJson();
+
+            var getZoneListRequest = new RestRequest("/zone-records", Method.Get);
+            getZoneListRequest.AddParameter("zone", zone);
+
+            var response = client.ExecuteAsync<ZoneDataModel>(getZoneListRequest).Result;
+
+            return response.Data;
+
+
+        }
+
 
         /// <inheritdoc />
         public ProfileResult GetProfile(string name, string keyAddress)

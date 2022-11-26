@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using x42.Features.xServer.Models;
+using x42.Features.xServer.Models.DNS;
 
 namespace x42.Features.xServer.Interfaces
 {
@@ -58,7 +59,7 @@ namespace x42.Features.xServer.Interfaces
         /// <summary>
         ///     Submit the payment for a price lock.
         /// </summary>
-        SubmitPaymentResult SubmitPayment(SubmitPaymentRequest submitPaymentRequest);
+        Task<SubmitPaymentResult> SubmitPayment(SubmitPaymentRequest submitPaymentRequest);
 
         /// <summary>
         ///     Will lookup the profile, and return the profile data.
@@ -76,5 +77,7 @@ namespace x42.Features.xServer.Interfaces
         Task ProvisionWordPressAsync(ProvisionWordPressRequest provisionWordPressRequest);
         Task RelayPriceLock(PriceLockResult priceLockData);
         Task UpdatexServer(xServerProvisioningRequest request);
+        List<string> GetZonesByKeyAddress(string keyAddress);
+        ZoneDataModel GetZoneRecords(string zone);
     }
 }

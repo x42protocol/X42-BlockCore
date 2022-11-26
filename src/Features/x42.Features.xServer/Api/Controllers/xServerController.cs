@@ -8,6 +8,8 @@ using x42.Features.xServer.Interfaces;
 using x42.Features.xServer.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using Blockcore.Features.Wallet;
+using System.Collections.Generic;
 
 namespace x42.Features.xServer.Api.Controllers
 {
@@ -26,15 +28,25 @@ namespace x42.Features.xServer.Api.Controllers
         private readonly IxServerManager xServerManager;
 
         /// <summary>
+        ///     Manager for 
+        /// </summary>
+        /// 
+
+        private readonly IXDocumentManager _xDocumentManager;
+
+        /// <summary>
         ///     Constructor for the xServer contoller
         /// </summary>
-        public xServerController(ILoggerFactory loggerFactory, IxServerManager xServerManager)
+        /// 
+
+        public xServerController(ILoggerFactory loggerFactory, IxServerManager xServerManager, IXDocumentManager xDocumentManager)
         {
             Guard.NotNull(loggerFactory, nameof(loggerFactory));
             Guard.NotNull(xServerManager, nameof(IxServerManager));
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.xServerManager = xServerManager;
+            this._xDocumentManager = xDocumentManager;
         }
 
         /// <summary>
@@ -255,11 +267,11 @@ namespace x42.Features.xServer.Api.Controllers
         /// <returns>A <see cref="SubmitPaymentResult" /> with submission results.</returns>
         [HttpPost]
         [Route("submitpayment")]
-        public IActionResult SubmitPayment([FromBody] SubmitPaymentRequest submitPaymentRequest)
+        public async Task<IActionResult> SubmitPaymentAsync([FromBody] SubmitPaymentRequest submitPaymentRequest)
         {
             try
             {
-                var result = this.xServerManager.SubmitPayment(submitPaymentRequest);
+                var result = await this.xServerManager.SubmitPayment(submitPaymentRequest);
                 return Json(result);
             }
             catch (Exception e)
@@ -280,6 +292,43 @@ namespace x42.Features.xServer.Api.Controllers
             try
             {
                 var result = this.xServerManager.GetProfile(name, keyAddress);
+                return Json(result);
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+
+
+        /// <summary>
+        ///     Will lookup the profile, and return the profile data.
+        /// </summary>
+        /// <returns>A JSON object containing the profile requested.</returns>
+        [HttpGet]
+        [Route("zones-by-key-address")]
+        public IActionResult GetZonesByKeyAddress(string keyAddress)
+        {
+            try
+            {
+                var result = this.xServerManager.GetZonesByKeyAddress(keyAddress);
+                return Json(result);
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+ 
+        [HttpGet]
+        [Route("zone-records")]
+        public IActionResult GetZonesRecords(string zone)
+        {
+            try
+            {
+                var result = this.xServerManager.GetZoneRecords(zone);
                 return Json(result);
             }
             catch (Exception e)
@@ -363,5 +412,6 @@ namespace x42.Features.xServer.Api.Controllers
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
             }
         }
+
     }
 }

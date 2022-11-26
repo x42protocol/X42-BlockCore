@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Blockcore.Features.Wallet": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
