@@ -1291,28 +1291,37 @@ namespace x42.Features.xServer
 
         private async Task UpdatePeersAsync(xServerPeers xServerPeerList)
         {
-            foreach (var peer in xServerPeerList.GetPeers())
+            try
             {
-                string xServerURL = Utils.GetServerUrl(peer.NetworkProtocol, peer.NetworkAddress, peer.NetworkPort);
-                var client = new RestClient(xServerURL);
-                var pingRequest = new RestRequest("/ping/", Method.Get);
-                var pingResponseTime = Stopwatch.StartNew();
-                var pingResult = await client.ExecuteAsync<PingResult>(pingRequest).ConfigureAwait(false);
-                pingResponseTime.Stop();
-                if (pingResult.StatusCode == HttpStatusCode.OK)
+                foreach (var peer in xServerPeerList.GetPeers())
                 {
-                    var pingData = pingResult.Data;
-                    peer.Version = pingData.Version;
-                    peer.ResponseTime = pingResponseTime.ElapsedMilliseconds;
-                    peer.Tier = pingData.Tier;
-                    peer.PublicKey = pingData.PublicKey;
-                    SyncPeerToPeersList(xServerPeerList, peer);
-                }
-                else
-                {
-                    SyncPeerToPeersList(xServerPeerList, peer, removePeer: true);
+                    string xServerURL = Utils.GetServerUrl(peer.NetworkProtocol, peer.NetworkAddress, peer.NetworkPort);
+                    var client = new RestClient(xServerURL);
+                    var pingRequest = new RestRequest("/ping/", Method.Get);
+                    var pingResponseTime = Stopwatch.StartNew();
+                    var pingResult = await client.ExecuteAsync<PingResult>(pingRequest).ConfigureAwait(false);
+                    pingResponseTime.Stop();
+                    if (pingResult.StatusCode == HttpStatusCode.OK)
+                    {
+                        var pingData = pingResult.Data;
+                        peer.Version = pingData.Version;
+                        peer.ResponseTime = pingResponseTime.ElapsedMilliseconds;
+                        peer.Tier = pingData.Tier;
+                        peer.PublicKey = pingData.PublicKey;
+                        SyncPeerToPeersList(xServerPeerList, peer);
+                    }
+                    else
+                    {
+                        SyncPeerToPeersList(xServerPeerList, peer, removePeer: true);
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                this.logger.LogError(e.ToString());
+                throw;
+            }
+         
         }
 
         private async Task XServerDiscoveryAsync(xServerPeers xServerPeerList)
