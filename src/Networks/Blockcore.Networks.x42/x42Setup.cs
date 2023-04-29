@@ -50,7 +50,7 @@ namespace Blockcore.Networks.x42
             HashGenesisBlock = "0x04ffe583707a96c1c2eb54af33a4b1dc6d9d8e09fea8c9a7b097ba88f0cb64c4",
             HashMerkleRoot = "0x6e3439a32382f83dee4f94a6f8bdd38908bcf0c82ec09aba85c5321357f01f67",
             DNS = new[] { "mainnet1.x42seed.host", "mainnetnode1.x42seed.host", "tech.x42.cloud", "x42.seed.blockcore.net" },
-            Nodes = new[] { "34.255.35.42", "52.211.235.48", "52.57.67.15", "23.21.158.91" },
+            Nodes = new[] { "51.254.85.40", "89.10.238.216", "121.170.70.22", "149.102.131.85", "149.102.149.209", "152.228.148.188", "161.97.101.147", "154.26.136.64", "209.145.56.58", "212.90.120.47" },
             Checkpoints = new Dictionary<int, CheckpointInfo>
             {
                 { 0, new CheckpointInfo(new uint256("0x04ffe583707a96c1c2eb54af33a4b1dc6d9d8e09fea8c9a7b097ba88f0cb64c4"), new uint256("0x0000000000000000000000000000000000000000000000000000000000000000")) }, // Genisis
@@ -62,7 +62,8 @@ namespace Blockcore.Networks.x42
                 { 500000, new CheckpointInfo(new uint256("0x7f9a88ebb32f47090ec37a110c5a05c1162a604dfbfb69c8d492e771cdb63289"), new uint256("0x19db6890c5c934e883bc99eb197509b0a81f19faeefcf49fd7fa6dab83644bfb")) },
                 { 800000, new CheckpointInfo(new uint256("0x981083b047ecf8157a8b2dc24e17ca8cfad01b4e2dabc314df97f3b64fdf37f5"), new uint256("0xf3f0a821801b32c73a7c4f42416ddad3f74b732bd517c968a9b93a33d3684e0b")) },
                 { 1000000, new CheckpointInfo(new uint256("0x1f5900bc62ddc11a383f8602d744fab1afa1e1969f0bf7f6b1b161476739a35e"), new uint256("0xca5fcf25a5561ebc91c5624b7c5ff697060f8a613e53e7a7e90abac925324e39")) },
-                { 1600000, new CheckpointInfo(new uint256("0x8940e8e27b166eaf9527184c60502f0c4aaa92c0cbec92dfaad743533a918488"), new uint256("0x3b438c0b3a00778089ab884926f83fd37e764d83cc4cc4616b6f662f5e6e558f")) }
+                { 1600000, new CheckpointInfo(new uint256("0x8940e8e27b166eaf9527184c60502f0c4aaa92c0cbec92dfaad743533a918488"), new uint256("0x3b438c0b3a00778089ab884926f83fd37e764d83cc4cc4616b6f662f5e6e558f")) },
+                { 2200000, new CheckpointInfo(new uint256("0x7c3684c0122efa6120bbfdf814825b9f7858947c789674bab6a2d1f23d98850f"), new uint256("0x458d4a6e4cf63f40fdde16c8999efde536c707431b408fa2c006ebebdab55d1c")) },
             }
         };
 
