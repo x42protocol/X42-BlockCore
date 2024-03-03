@@ -22,6 +22,7 @@ using Blockcore.Networks.x42.Networks.Policies;
 using Blockcore.Networks.x42.Networks.Rules;
 using Blockcore.Networks.x42.Networks.Setup;
 using Blockcore.P2P;
+using NBitcoin;
 
 namespace Blockcore.Networks.x42.Networks
 {

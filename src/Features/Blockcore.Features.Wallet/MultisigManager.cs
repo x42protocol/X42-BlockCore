@@ -7,6 +7,7 @@ using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Features.Wallet.Interfaces;
 using Blockcore.Features.Wallet.Types;
 using Blockcore.Interfaces;
+using Blockcore.NBitcoin;
 using Blockcore.Networks;
 using NBitcoin;
 

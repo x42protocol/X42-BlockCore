@@ -12,7 +12,6 @@ using Blockcore.Configuration;
 using Blockcore.Utilities;
 using x42.Features.xServer.Interfaces;
 using x42.Features.xServer.Models;
-using NBitcoin.Protocol;
 using System.Collections.Concurrent;
 using NBitcoin;
 using System.Net.Sockets;
@@ -27,6 +26,8 @@ using Polly.Retry;
 using Polly;
 using System.Xml.Linq;
 using x42.Features.xServer.Models.DNS;
+using Blockcore.Networks;
+using Blockcore.NBitcoin;
 
 namespace x42.Features.xServer
 {

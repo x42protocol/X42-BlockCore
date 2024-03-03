@@ -166,45 +166,6 @@ namespace Blockcore.Features.ColdStaking.Api.Controllers
         }
 
         /// <summary>
-        /// Gets profile address.
-        /// <param name="request">An object containing the necessary parameters to retrieve
-        /// the profile address.</param>
-        /// <returns>A JSON object containing the address for a profile account.</returns>
-        /// </summary>
-        [Route("getprofileaddress")]
-        [HttpGet]
-        public IActionResult GetProfileAddress([FromQuery] GetProfileAddressRequest request)
-        {
-            Guard.NotNull(request, nameof(request));
-
-            // Checks the request is valid.
-            if (!this.ModelState.IsValid)
-            {
-                return ModelStateErrors.BuildErrorResponse(this.ModelState);
-            }
-
-            try
-            {
-                var result = new GetColdStakingAddressResponse();
-                var account = this.ColdStakingManager.GetOrCreateColdStakingAccount(Uri.UnescapeDataString(request.WalletName), request.IsColdWalletAccount, Uri.UnescapeDataString(request.WalletPassword)).Name;
-                if (account != null)
-                {
-                    HdAddress address = this.ColdStakingManager.GetFirstColdStakingAddress(Uri.UnescapeDataString(request.WalletName), request.IsColdWalletAccount);
-                    if (address != null)
-                    {
-                        result.Address = request.Segwit ? address?.Bech32Address : address?.Address;
-                    }   
-                }
-                return this.Json(result);
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError("Exception occurred: {0}", e.ToString());
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
-        }
-
-        /// <summary>
         /// Spends funds from a normal wallet addresses to the cold staking script. It is expected that this
         /// spend will be detected by both the hot wallet and cold wallet and allow cold staking to occur using this
         /// transaction's output as input.

@@ -177,8 +177,6 @@ namespace Blockcore.Features.BlockStore.Tests
 
             var controller = new BlockStoreController(KnownNetworks.StratisTest, logger.Object, store.Object, chainState.Object, chainIndexer, addressIndexer.Object, utxoIndexer.Object, stakeChain.Object);
 
-            var controller = new BlockStoreController(KnownNetworks.StratisTest, logger.Object, store.Object, chainState.Object, chainIndexer, addressIndexer.Object, utxoIndexerMock.Object);
-
             var json = (JsonResult)controller.GetBlockCount();
             int result = int.Parse(json.Value.ToString());
 
@@ -202,8 +200,6 @@ namespace Blockcore.Features.BlockStore.Tests
             chain.Setup(x => x.Tip).Returns(new ChainedHeader(block.Header, block.Header.GetHash(), 1));
 
             var controller = new BlockStoreController(KnownNetworks.StratisTest, logger.Object, store.Object, chainState.Object, chain.Object, addressIndexer.Object, utxoIndexer.Object, stakeChain.Object);
-
-            var controller = new BlockStoreController(KnownNetworks.StratisTest, logger.Object, store.Object, chainState.Object, chain.Object, addressIndexer.Object, utxoIndexerMock.Object);
 
             return (store, controller);
         }

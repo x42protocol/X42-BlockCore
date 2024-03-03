@@ -83,9 +83,6 @@ namespace Blockcore.Features.BlockStore
             this.prunedBlockRepository = prunedBlockRepository;
             this.addressIndexer = addressIndexer;
             this.pruneBlockStoreService = pruneBlockStoreService;
-
-            addressIndexer.InitializingFeature = this;
-
             nodeStats.RegisterStats(this.AddInlineStats, StatsType.Inline, this.GetType().Name, 900);
         }
 
@@ -200,23 +197,23 @@ namespace Blockcore.Features.BlockStore
                 features
                 .AddFeature<BlockStoreFeature>()
                 .FeatureServices(services =>
-                    {
-                        services.AddSingleton<IBlockStoreQueue, BlockStoreQueue>().AddSingleton<IBlockStore>(provider => provider.GetService<IBlockStoreQueue>());
+                {
+                    services.AddSingleton<IBlockStoreQueue, BlockStoreQueue>().AddSingleton<IBlockStore>(provider => provider.GetService<IBlockStoreQueue>());
 
-                        fullNodeBuilder.PersistenceProviderManager.RequirePersistence<BlockStoreFeature>(services);
+                    fullNodeBuilder.PersistenceProviderManager.RequirePersistence<BlockStoreFeature>(services);
 
-                        if (fullNodeBuilder.Network.Consensus.IsProofOfStake)
-                            services.AddSingleton<BlockStoreSignaled, ProvenHeadersBlockStoreSignaled>();
-                        else
-                            services.AddSingleton<BlockStoreSignaled>();
+                    if (fullNodeBuilder.Network.Consensus.IsProofOfStake)
+                        services.AddSingleton<BlockStoreSignaled, ProvenHeadersBlockStoreSignaled>();
+                    else
+                        services.AddSingleton<BlockStoreSignaled>();
 
-                        services.AddSingleton<StoreSettings>();
-                        services.AddSingleton<IBlockStoreQueueFlushCondition, BlockStoreQueueFlushCondition>();
-                        services.AddSingleton<IAddressIndexer, AddressIndexer>();
-                        services.AddSingleton<IUtxoIndexer, UtxoIndexer>();
+                    services.AddSingleton<StoreSettings>();
+                    services.AddSingleton<IBlockStoreQueueFlushCondition, BlockStoreQueueFlushCondition>();
+                    services.AddSingleton<IAddressIndexer, AddressIndexer>();
+                    services.AddSingleton<IUtxoIndexer, UtxoIndexer>();
 
-                        services.AddSingleton<IPruneBlockStoreService, PruneBlockStoreService>();
-                    });
+                    services.AddSingleton<IPruneBlockStoreService, PruneBlockStoreService>();
+                });
             });
 
             return fullNodeBuilder;

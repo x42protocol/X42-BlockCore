@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security;
+using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Features.Miner.Api.Models;
 using Blockcore.Features.Miner.Interfaces;
 using Blockcore.Features.Wallet.Interfaces;
@@ -67,11 +68,36 @@ namespace Blockcore.Features.Miner.Api.Controllers
             try
             {
                 if (!this.fullNode.Network.Consensus.IsProofOfStake)
-                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", "Method not available for Proof of Stake");
+                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", "Method only available for Proof of Stake");
 
                 GetStakingInfoModel model = this.posMinting != null ? this.posMinting.GetGetStakingInfoModel() : new GetStakingInfoModel();
 
                 return this.Json(model);
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Get staking info from the miner.
+        /// </summary>
+        /// <returns>All staking info details as per the GetStakingInfoModel.</returns>
+        [Route("getnetworkstakinginfo")]
+        [HttpGet]
+        public IActionResult GetNetworkStakingInfo()
+        {
+            try
+            {
+                if (!this.fullNode.Network.Consensus.IsProofOfStake)
+                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", "Method only available for Proof of Stake");
+
+                double networkWeight = this.posMinting.GetNetworkWeight();
+                double posDifficulty = this.posMinting.GetDifficulty(null);
+
+                return this.Json(new GetNetworkStakingInfoModel { Difficulty = posDifficulty, NetStakeWeight = (long)networkWeight });
             }
             catch (Exception e)
             {
@@ -94,7 +120,7 @@ namespace Blockcore.Features.Miner.Api.Controllers
             try
             {
                 if (!this.fullNode.Network.Consensus.IsProofOfStake)
-                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", "Method not available for Proof of Stake");
+                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", "Method only available for Proof of Stake");
 
                 if (!this.ModelState.IsValid)
                 {
@@ -140,7 +166,7 @@ namespace Blockcore.Features.Miner.Api.Controllers
             try
             {
                 if (!this.fullNode.Network.Consensus.IsProofOfStake)
-                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", "Method not available for Proof of Stake");
+                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", "Method only available for Proof of Stake");
 
                 this.fullNode.NodeFeature<MiningFeature>(true).StopStaking();
                 return this.Ok();
@@ -163,10 +189,16 @@ namespace Blockcore.Features.Miner.Api.Controllers
             try
             {
                 if (!this.fullNode.Network.Consensus.IsProofOfStake)
-                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", "Method not available for Proof of Stake");
+                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", "Method only available for Proof of Stake");
 
                 if (!this.minerSettings.EnforceStakingFlag)
                     return ErrorHelpers.BuildErrorResponse(HttpStatusCode.Forbidden, "Operation not allowed", "This operation is only allowed if EnforceStakingFlag is true");
+
+                Script redeemScript = null;
+                if (!string.IsNullOrEmpty(request.RedeemScript))
+                {
+                    redeemScript = Script.FromBytesUnsafe(Encoders.Hex.DecodeData(request.RedeemScript));
+                }
 
                 Wallet.Types.Wallet wallet = this.walletManager.GetWallet(request.WalletName);
 
@@ -178,8 +210,32 @@ namespace Blockcore.Features.Miner.Api.Controllers
                         {
                             address.StakingExpiry = request.StakingExpiry;
                         }
+
+                        if (redeemScript != null && address.RedeemScripts != null)
+                        {
+
+                            if (address.RedeemScripts.Contains(redeemScript))
+                            {
+                                if (address.RedeemScriptExpiry == null)
+                                    address.RedeemScriptExpiry = new List<RedeemScriptExpiry>();
+
+                                var expiryScript = address.RedeemScriptExpiry.FirstOrDefault(w => w.RedeemScript == redeemScript);
+
+                                if (expiryScript == null)
+                                {
+                                    expiryScript = new RedeemScriptExpiry
+                                    {
+                                        RedeemScript = redeemScript,
+                                    };
+
+                                    address.RedeemScriptExpiry.Add(expiryScript);
                                 }
+
+                                expiryScript.StakingExpiry = request.StakingExpiry;
                             }
+                        }
+                    }
+                }
 
                 return this.Ok();
             }
@@ -197,7 +253,7 @@ namespace Blockcore.Features.Miner.Api.Controllers
             try
             {
                 if (!this.fullNode.Network.Consensus.IsProofOfStake)
-                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", "Method not available for Proof of Stake");
+                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", "Method only available for Proof of Stake");
 
                 if (!this.minerSettings.EnforceStakingFlag)
                     return ErrorHelpers.BuildErrorResponse(HttpStatusCode.Forbidden, "Operation not allowed", "This operation is only allowed if EnforceStakingFlag is true");
@@ -210,13 +266,18 @@ namespace Blockcore.Features.Miner.Api.Controllers
                 {
                     foreach (HdAddress address in account.GetCombinedAddresses())
                     {
-                        if (address.StakingExpiry != null && address.StakingExpiry > DateTime.UtcNow)
+                        GetStakingAddressesModelItem addressItem = null;
+
+                        if (address.StakingExpiry != null)
                         {
-                            model.Addresses.Add(new GetStakingAddressesModelItem
+                            addressItem = new GetStakingAddressesModelItem
                             {
                                 Addresses = address.Address,
-                                Expiry = address.StakingExpiry
-                            });
+                                Expiry = address.StakingExpiry,
+                                Expired = address.StakingExpiry < DateTime.UtcNow,
+                            };
+
+                            model.Addresses.Add(addressItem);
                         }
 
                         if (address.RedeemScriptExpiry != null)
@@ -232,7 +293,19 @@ namespace Blockcore.Features.Miner.Api.Controllers
                                         Expired = address.StakingExpiry < DateTime.UtcNow,
                                     };
                                 }
+
+                                var redeemScriptExpiryItem = new RedeemScriptExpiryItem
+                                {
+                                    RedeemScript = Encoders.Hex.EncodeData(((Script)redeemScriptExpiry.RedeemScript).ToBytes(false)),
+                                    StakingExpiry = redeemScriptExpiry.StakingExpiry,
+                                    Expired = redeemScriptExpiry.StakingExpiry > DateTime.UtcNow
+                                };
+
+                                addressItem.RedeemScriptExpiry.Add(redeemScriptExpiryItem);
                             }
+                        }
+                    }
+                }
 
                 return this.Json(model);
             }

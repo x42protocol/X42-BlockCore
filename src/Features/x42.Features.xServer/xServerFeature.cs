@@ -13,6 +13,7 @@ using System.Linq;
 using Blockcore.Features.NodeHost.Hubs;
 using System;
 using Blockcore.Features.Wallet;
+using Blockcore.Networks;
 
 [assembly: InternalsVisibleTo("x42.Features.xServer.Tests")]
 
