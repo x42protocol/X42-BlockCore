@@ -18,6 +18,7 @@ using Blockcore.Features.WalletWatchOnly;
 using Blockcore.Networks.X1.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using x42.Features.xServer;
 
 namespace Blockcore.Node
 {
@@ -42,6 +43,8 @@ namespace Blockcore.Node
                     break;
                 case "AMS":
                 case "X42":
+                    nodeBuilder.UsePosConsensus().AddPowPosMining().UseColdStakingWallet().UsexServer();
+                    break;
                 case "BCP":
                 case "CITY":
                 case "STRAT":

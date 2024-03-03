@@ -7,6 +7,7 @@
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Features\x42.Features.xServer\x42.Features.xServer.csproj" />
     <ProjectReference Include="..\..\Networks\BlockCore.Networks.Cybits\Blockcore.Networks.Cybits.csproj" />
     <ProjectReference Include="..\..\Features\Blockcore.Features.Notifications\Blockcore.Features.Notifications.csproj" />
     <ProjectReference Include="..\..\Features\Blockcore.Features.WalletWatchOnly\Blockcore.Features.WalletWatchOnly.csproj" />
