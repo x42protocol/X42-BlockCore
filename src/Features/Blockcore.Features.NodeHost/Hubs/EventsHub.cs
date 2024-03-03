@@ -56,10 +56,5 @@ namespace Blockcore.Features.NodeHost.Hubs
 
             return Task.CompletedTask;
         }
-
-        public Task Echo(string message)
-        {
-            return this.Clients.Caller.SendAsync("Echo", message);
-        }
     }
 }

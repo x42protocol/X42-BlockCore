@@ -8,7 +8,7 @@ using Blockcore.Features.BlockStore.Api.Controllers;
 using Blockcore.Features.BlockStore.Api.Models;
 using Microsoft.Extensions.Logging;
 
-namespace Blockcore.Features.BlockStore.Api.Contollers
+namespace Blockcore.Features.BlockStore.Api
 {
     /// <summary>Rest client for <see cref="BlockStoreController"/>.</summary>
     public interface IBlockStoreClient : IRestApiClientBase

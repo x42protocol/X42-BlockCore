@@ -52,9 +52,9 @@ namespace Blockcore.Builder
 
                 this.Execute(service =>
                 {
-                    service.State = FeatureInitializationState.Initializing;
+                    service.State = "Initializing";
                     service.InitializeAsync().GetAwaiter().GetResult();
-                    service.State = FeatureInitializationState.Initialized;
+                    service.State = "Initialized";
                 });
             }
             catch
@@ -72,9 +72,9 @@ namespace Blockcore.Builder
             {
                 this.Execute(feature =>
                 {
-                    feature.State = FeatureInitializationState.Disposing;
+                    feature.State = "Disposing";
                     feature.Dispose();
-                    feature.State = FeatureInitializationState.Disposed;
+                    feature.State = "Disposed";
                 }, true);
             }
             catch

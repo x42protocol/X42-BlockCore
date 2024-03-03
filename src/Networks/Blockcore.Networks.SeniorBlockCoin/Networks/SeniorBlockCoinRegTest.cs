@@ -11,6 +11,7 @@ using Blockcore.Networks;
 using Blockcore.P2P;
 using Blockcore.Networks.SeniorBlockCoin.Networks.Policies;
 using Blockcore.Networks.SeniorBlockCoin.Networks.Setup;
+using Blockcore.Networks.SeniorBlockCoin.Networks.Deployments;
 
 namespace Blockcore.Networks.SeniorBlockCoin.Networks
 {
@@ -66,7 +67,12 @@ namespace Blockcore.Networks.SeniorBlockCoin.Networks
                 [BuriedDeployments.BIP65] = 0,
                 [BuriedDeployments.BIP66] = 0
             };
-
+            var bip9Deployments = new SeniorBlockCoinBIP9Deployments()
+            {
+                [SeniorBlockCoinBIP9Deployments.CSV] = new BIP9DeploymentsParameters("CSV", 0, BIP9DeploymentsParameters.AlwaysActive, 999999999, BIP9DeploymentsParameters.AlwaysActive),
+                [SeniorBlockCoinBIP9Deployments.Segwit] = new BIP9DeploymentsParameters("Segwit", 1, BIP9DeploymentsParameters.AlwaysActive, 999999999, BIP9DeploymentsParameters.AlwaysActive),
+                [SeniorBlockCoinBIP9Deployments.ColdStaking] = new BIP9DeploymentsParameters("ColdStaking", 2, BIP9DeploymentsParameters.AlwaysActive, 999999999, BIP9DeploymentsParameters.AlwaysActive),
+            };
             Consensus = new Blockcore.Consensus.Consensus(
              consensusFactory: consensusFactory,
              consensusOptions: consensusOptions,
@@ -77,7 +83,7 @@ namespace Blockcore.Networks.SeniorBlockCoin.Networks
              majorityRejectBlockOutdated: 950,
              majorityWindow: 1000,
              buriedDeployments: buriedDeployments,
-             bip9Deployments: new NoBIP9Deployments(),
+             bip9Deployments: bip9Deployments,
              bip34Hash: null,
              minerConfirmationWindow: 2016, // nPowTargetTimespan / nPowTargetSpacing
              maxReorgLength: 500,

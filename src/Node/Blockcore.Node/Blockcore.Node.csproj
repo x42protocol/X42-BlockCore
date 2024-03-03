@@ -5,14 +5,12 @@
     <AssemblyName>Blockcore.Node</AssemblyName>
     <PackageId>Blockcore.Node</PackageId>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-	<UseRazorSourceGenerator>False</UseRazorSourceGenerator>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Networks\BlockCore.Networks.Cybits\Blockcore.Networks.Cybits.csproj" />
     <ProjectReference Include="..\..\Features\Blockcore.Features.Notifications\Blockcore.Features.Notifications.csproj" />
     <ProjectReference Include="..\..\Features\Blockcore.Features.WalletWatchOnly\Blockcore.Features.WalletWatchOnly.csproj" />
     <ProjectReference Include="..\..\Features\Persistence\Blockcore.Features.Persistence.Rocksdb.CorePackage\Blockcore.Features.Persistence.Rocksdb.CorePackage.csproj" />
-    <ProjectReference Include="..\..\Features\x42.Features.xServer\x42.Features.xServer.csproj" />
     <ProjectReference Include="..\..\Networks\Blockcore.Networks.BCP\Blockcore.Networks.BCP.csproj" />
     <ProjectReference Include="..\..\Networks\Blockcore.Networks.Bitcoin\Blockcore.Networks.Bitcoin.csproj" />
     <ProjectReference Include="..\..\Networks\Blockcore.Networks.City\Blockcore.Networks.City.csproj" />
@@ -49,22 +47,11 @@
     <PackageReference Update="Microsoft.SourceLink.GitHub" Version="1.1.1" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.3.261602">
+    <PackageReference Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.3.310801">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Update="Microsoft.SourceLink.GitHub" Version="1.1.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="AppData\.env">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="AppData\app.config.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="AppData\xServer.conf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 </Project>

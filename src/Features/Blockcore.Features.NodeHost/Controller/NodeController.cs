@@ -6,8 +6,6 @@ using System.Net;
 using System.Threading.Tasks;
 using Blockcore.AsyncWork;
 using Blockcore.Base;
-using Blockcore.Base.Deployments;
-using Blockcore.Base.Deployments.Models;
 using Blockcore.Builder.Feature;
 using Blockcore.Configuration;
 using Blockcore.Connection;
@@ -22,8 +20,6 @@ using Blockcore.Networks;
 using Blockcore.P2P;
 using Blockcore.P2P.Peer;
 using Blockcore.Utilities;
-using Blockcore.Utilities;
-using Blockcore.Utilities.Extensions;
 using Blockcore.Utilities.JsonErrors;
 using Blockcore.Utilities.ModelStateErrors;
 using Microsoft.AspNetCore.Authorization;
@@ -94,9 +90,6 @@ namespace Blockcore.Controllers
 
         private readonly IConsensusManager consensusManager;
 
-        /// <summary>A interface implementation for the initial block download state.</summary>
-        private readonly IInitialBlockDownloadState ibdState;
-
         public NodeController(
             ChainIndexer chainIndexer,
             IChainState chainState,
@@ -113,8 +106,7 @@ namespace Blockcore.Controllers
             INetworkDifficulty networkDifficulty = null,
             IPooledGetUnspentTransaction pooledGetUnspentTransaction = null,
             IPooledTransaction pooledTransaction = null,
-            IConsensusManager consensusManager = null,
-            IInitialBlockDownloadState ibdState = null)
+            IConsensusManager consensusManager = null)
         {
             Guard.NotNull(fullNode, nameof(fullNode));
             Guard.NotNull(network, nameof(network));
@@ -145,7 +137,6 @@ namespace Blockcore.Controllers
             this.pooledGetUnspentTransaction = pooledGetUnspentTransaction;
             this.pooledTransaction = pooledTransaction;
             this.consensusManager = consensusManager;
-            this.ibdState = ibdState;
         }
 
         /// <summary>
@@ -183,7 +174,7 @@ namespace Blockcore.Controllers
                 model.FeaturesData.Add(new FeatureData
                 {
                     Namespace = feature.GetType().ToString(),
-                    State = feature.State.ToString()
+                    State = feature.State
                 });
             }
 
@@ -258,7 +249,6 @@ namespace Blockcore.Controllers
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
             }
         }
-
 
         /// <summary>
         /// Gets a raw transaction that is present on this full node.

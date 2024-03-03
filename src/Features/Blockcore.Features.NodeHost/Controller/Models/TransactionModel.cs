@@ -94,7 +94,6 @@ namespace Blockcore.Controllers.Models
                 {
                     this.BlockHash = block.HashBlock.ToString();
                     this.Time = this.BlockTime = Utils.DateTimeToUnixTime(block.Header.BlockTime);
-                    this.BlockHeight = block.Height;
                     if (tip != null)
                         this.Confirmations = tip.Height - block.Height + 1;
                 }
@@ -152,10 +151,6 @@ namespace Blockcore.Controllers.Models
         /// <summary>The time the block was confirmed.</summary>
         [JsonProperty(Order = 13, PropertyName = "blocktime", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public uint? BlockTime { get; set; }
-
-        /// <summary>The height of the block was confirmed.</summary>
-        [JsonProperty(Order = 14, PropertyName = "blockheight", DefaultValueHandling = DefaultValueHandling.Ignore)]
-        public int? BlockHeight { get; set; }
     }
 
     /// <summary>

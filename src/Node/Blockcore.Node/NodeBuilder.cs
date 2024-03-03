@@ -14,7 +14,7 @@ using Blockcore.Features.Dns;
 using Blockcore.Features.Miner.Interfaces;
 using Blockcore.Persistence;
 using Blockcore.Features.Notifications;
-using x42.Features.xServer;
+using Blockcore.Features.WalletWatchOnly;
 using Blockcore.Networks.X1.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;

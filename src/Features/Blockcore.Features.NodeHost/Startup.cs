@@ -23,7 +23,6 @@ using Blockcore.Features.NodeHost.Authorization;
 using Blockcore.Features.NodeHost.Settings;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using System.Text.Json.Serialization;
-using Newtonsoft.Json.Serialization;
 
 namespace Blockcore.Features.NodeHost
 {
@@ -144,8 +143,6 @@ namespace Blockcore.Features.NodeHost
                 {
                     Serializer.RegisterFrontConverters(options.SerializerSettings);
                     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-
                 })
                 .AddControllers(this.fullNode.Services.Features, services).AddJsonOptions(x => {
                     x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -250,9 +247,7 @@ namespace Blockcore.Features.NodeHost
                 if (hostSettings.EnableWS)
                 {
                     IHubContext<EventsHub> hubContext = app.ApplicationServices.GetService<IHubContext<EventsHub>>();
- 
                     IEventsSubscriptionService eventsSubscriptionService = fullNode.Services.ServiceProvider.GetService<IEventsSubscriptionService>();
-
                     eventsSubscriptionService.SetHub(hubContext);
 
                     endpoints.MapHub<EventsHub>("/ws-events");

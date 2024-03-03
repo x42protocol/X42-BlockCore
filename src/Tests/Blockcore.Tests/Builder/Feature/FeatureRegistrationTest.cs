@@ -107,7 +107,7 @@ namespace Blockcore.Tests.Builder.Feature
         {
             public bool InitializeBeforeBase { get; set; }
 
-            public FeatureInitializationState State { get; set; }
+            public string State { get; set; }
 
             public void LoadConfiguration()
             {
@@ -127,15 +127,6 @@ namespace Blockcore.Tests.Builder.Feature
             public void ValidateDependencies(IFullNodeServiceProvider services)
             {
                 throw new NotImplementedException();
-            }
-
-            public void WaitInitialized()
-            {
-            }
-
-            public bool IsEnabled()
-            {
-                return true;
             }
         }
     }
