@@ -15,6 +15,7 @@ using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.NBitcoin.Protocol;
 using Blockcore.Networks;
 using Blockcore.P2P;
+using NBitcoin;
 
 namespace Blockcore.NBitcoin
 {
