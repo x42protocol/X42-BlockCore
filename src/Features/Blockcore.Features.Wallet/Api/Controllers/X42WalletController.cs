@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net;
+using Asp.Versioning;
 using Blockcore.Connection;
 using Blockcore.Consensus.Chain;
 using Blockcore.Features.Wallet.Api.Models;
