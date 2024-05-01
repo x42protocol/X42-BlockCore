@@ -19,7 +19,7 @@ jobs:
     env:
       SOLUTION_PATH: 'src/Blockcore.sln'
       BUILD_CONFIGURATION: 'Release'
-      DYLD_LIBRARY_PATH: "/usr/local/lib"
+      DYLD_LIBRARY_PATH: "/opt/homebrew/lib"
 
     steps:
 
@@ -35,6 +35,10 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: brew install leveldb
 
+    - name: Copy LevelDB Library
+      if: matrix.os == 'macos-latest'
+      run: cp /opt/homebrew/lib/libleveldb.dylib src/Tests/Blockcore.Tests/bin/Release/net8.0/runtimes/osx/native/
+    
     - name: Restore
       run: dotnet restore ${{env.SOLUTION_PATH}}
       
