@@ -35,16 +35,16 @@ jobs:
       if: matrix.os == 'macos-latest'
       run: brew install leveldb
 
-    - name: Copy LevelDB Library
-      if: matrix.os == 'macos-latest'
-      run: cp /opt/homebrew/lib/libleveldb.dylib src/Tests/Blockcore.Tests/bin/Release/net8.0/runtimes/osx/native/
-    
     - name: Restore
       run: dotnet restore ${{env.SOLUTION_PATH}}
       
     - name: Build
       run: dotnet build -c ${{env.BUILD_CONFIGURATION}} -v m ${{env.SOLUTION_PATH}}
-      
+
+    - name: Copy LevelDB Library
+      if: matrix.os == 'macos-latest'
+      run: cp /opt/homebrew/lib/libleveldb.dylib src/Tests/Blockcore.Tests/bin/Release/net8.0/runtimes/osx/native/
+
     - name: Unit Test
       run: dotnet test -v=normal --filter "FullyQualifiedName!~IntegrationTests&Unstable!=True" -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
 
