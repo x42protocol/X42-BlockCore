@@ -10,34 +10,17 @@ on:
 
 jobs:
 
-  buildTestRelease:
+  buildAndUnitTest:
 
     strategy:
       matrix:
         os: [ windows-latest, ubuntu-latest, macos-latest ]
-        include:
-          - os: windows-latest
-            extension: ".zip"
-            runtime: "win-x64"
-            package_runtime: "win-x64"
-          - os: ubuntu-latest
-            extension: ".tar.gz"
-            runtime: "linux-x64"
-            package_runtime: "linux-x64"
-          - os: macos-latest
-            runtime: "osx-x64"
-            package_runtime: "mac-x64"
-            extension: ".zip"
-        node_version: [16.x]
-        dotnet_version: ['6.0.101']
       fail-fast: false
 
     runs-on: ${{ matrix.os }}
 
     env:
-      PROJECT_NAME: 'x42.Node'
       SOLUTION_PATH: 'src/Blockcore.sln'
-      PROJECT_PATH: 'src/Node/Blockcore.Node/Blockcore.Node.csproj'
       BUILD_CONFIGURATION: 'Release'
 
     steps:
@@ -60,15 +43,14 @@ jobs:
       run: |
         echo VERSION=$(npm run version --silent) >> $GITHUB_ENV
       shell: bash
-        echo "::set-env name=RELEASE_CONFIGURATION::${{ matrix.runtime }}"
 
     - name: Unit Test
       run: |
         dotnet nuget locals all --clear
         dotnet test -v=normal --filter "FullyQualifiedName!~IntegrationTests&Unstable!=True" -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
 
-    - name: Build
-      run: dotnet build -c ${{env.BUILD_CONFIGURATION}} -r ${{env.RELEASE_CONFIGURATION}} -v m ${{env.SOLUTION_PATH}} -p:ImportByWildcardBeforeSolution=false
+    - name: Nuget Pack
+      run: dotnet pack --configuration ${{env.BUILD_CONFIGURATION}} --output "${{github.workspace}}/package/" ${{env.SOLUTION_PATH}}
 
     - uses: actions/upload-artifact@v2
       with:
@@ -81,9 +63,9 @@ jobs:
       with:
         commit: 'master'
         token: ${{ secrets.GITHUB_TOKEN }}
-        files: "${{env.RELEASE_PATH}}"
+        folder: "${{github.workspace}}/package/"
         draft: true
-        prerelease: true
+        prerelease: false
         body: ''
         name: "Blockcore ${{env.VERSION}}"
         tag: ${{env.VERSION}}
