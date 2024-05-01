@@ -19,6 +19,7 @@ jobs:
     env:
       SOLUTION_PATH: 'src/Blockcore.sln'
       BUILD_CONFIGURATION: 'Release'
+      DYLD_LIBRARY_PATH: "/usr/local/lib"
 
     steps:
 
