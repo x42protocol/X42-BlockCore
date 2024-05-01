@@ -20,6 +20,7 @@ jobs:
       SOLUTION_PATH: 'src/Blockcore.sln'
       BUILD_CONFIGURATION: 'Release'
       DYLD_LIBRARY_PATH: "/opt/homebrew/lib"
+      DYLD_PRINT_LIBRARIES: "1"
 
     steps:
 
@@ -33,7 +34,8 @@ jobs:
 
     - name: Install LevelDB
       if: matrix.os == 'macos-latest'
-      run: brew install leveldb
+      run: brew install leveldb snappy gperftools
+    
 
     - name: Restore
       run: dotnet restore ${{env.SOLUTION_PATH}}
@@ -41,9 +43,13 @@ jobs:
     - name: Build
       run: dotnet build -c ${{env.BUILD_CONFIGURATION}} -v m ${{env.SOLUTION_PATH}}
 
+    - name: Create Native Directory
+      if: matrix.os == 'macos-latest'
+      run: mkdir -p src/Tests/Blockcore.Tests/bin/Release/net8.0/runtimes/osx/native
+    
     - name: Copy LevelDB Library
       if: matrix.os == 'macos-latest'
-      run: cp /opt/homebrew/lib/libleveldb.dylib src/Tests/Blockcore.Tests/bin/Release/net8.0/runtimes/osx/native/
+      run: cp /opt/homebrew/lib/libleveldb.dylib src/Tests/Blockcore.Tests/bin/Release/net8.0/runtimes/osx/native/libleveldb.dylib
 
     - name: Unit Test
       run: dotnet test -v=normal --filter "FullyQualifiedName!~IntegrationTests&Unstable!=True" -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
