@@ -5,8 +5,8 @@ using Blockcore.Consensus;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Features.Miner.Staking;
+using Blockcore.NBitcoin;
 using FluentAssertions;
-using NBitcoin;
 using Xunit;
 
 namespace Blockcore.Features.Miner.Tests
@@ -141,7 +141,8 @@ namespace Blockcore.Features.Miner.Tests
                 coinstakeContext: coinStakeContext,
                 coinstakeOutputValue: coinstakeInputValue,
                 utxosCount: amounts.Count,
-                amountStaked: amountStaked);
+                amountStaked: amountStaked,
+                reward: (long)reward);
             return (coinstakeInputValue, transaction);
         }
 
@@ -194,7 +195,8 @@ namespace Blockcore.Features.Miner.Tests
                 coinstakeContext: coinStakeContext,
                 coinstakeOutputValue: coinstakeInputValue,
                 utxosCount: amounts.Count,
-                amountStaked: amounts.Sum(u => u.Satoshi));
+                amountStaked: amounts.Sum(u => u.Satoshi),
+                reward: (long)reward);
             return transaction;
         }
 

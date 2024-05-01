@@ -3,16 +3,17 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
 using Blockcore.Builder;
 using Blockcore.Builder.Feature;
 using Blockcore.Configuration.Logging;
 using Blockcore.Utilities;
 using x42.Features.xServer.Interfaces;
 using System.Linq;
-using Blockcore.Networks;
 using Blockcore.Features.NodeHost.Hubs;
 using System;
 using Blockcore.Features.Wallet;
+using Blockcore.Networks;
 
 [assembly: InternalsVisibleTo("x42.Features.xServer.Tests")]
 

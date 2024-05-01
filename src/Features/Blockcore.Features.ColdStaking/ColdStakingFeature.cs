@@ -23,7 +23,6 @@ using Blockcore.Utilities;
 using Blockcore.Utilities.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
 
 namespace Blockcore.Features.ColdStaking
 {
@@ -236,6 +235,8 @@ namespace Blockcore.Features.ColdStaking
                     services.RemoveSingleton<IWalletManager>();
                     services.AddSingleton<IWalletManager, ColdStakingManager>();
                     services.AddSingleton<INavigationItem, ColdStakingNavigationItem>();
+                    services.AddSingleton<INavigationItem, ColdStakePoolNavigationItem>();
+
                 });
             });
 

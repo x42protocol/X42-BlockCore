@@ -24,6 +24,10 @@ using Blockcore.Features.Wallet.Types;
 using Blockcore.IntegrationTests.Common.Extensions;
 using Blockcore.IntegrationTests.Common.Runners;
 using Blockcore.Interfaces;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.BIP39;
+using Blockcore.NBitcoin.DataEncoders;
+using Blockcore.NBitcoin.Protocol;
 using Blockcore.Networks;
 using Blockcore.P2P;
 using Blockcore.P2P.Peer;
@@ -34,9 +38,6 @@ using Blockcore.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NBitcoin;
-using NBitcoin.DataEncoders;
-using NBitcoin.Protocol;
 
 namespace Blockcore.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
@@ -77,6 +78,7 @@ namespace Blockcore.IntegrationTests.Common.EnvironmentMockUpHelpers
         private bool builderOverrideDateTimeProvider;
         private bool builderWithDummyWallet;
         private bool builderWithWallet;
+        private bool builderWithSegwitWallet;
         private string builderWalletName;
         private string builderWalletPassword;
         private string builderWalletPassphrase;
@@ -221,6 +223,27 @@ namespace Blockcore.IntegrationTests.Common.EnvironmentMockUpHelpers
             this.builderWalletPassphrase = walletPassphrase;
             this.builderWalletPassword = walletPassword;
             this.builderWalletMnemonic = walletMnemonic;
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a segwit wallet to this node with defaulted parameters under the BIP84 derivation path.
+        /// </summary>
+        /// <param name="walletPassword">Wallet password defaulted to "password".</param>
+        /// <param name="walletName">Wallet name defaulted to "mywallet".</param>
+        /// <param name="walletPassphrase">Wallet passphrase defaulted to "passphrase".</param>
+        /// <param name="walletMnemonic">Optional wallet mnemonic.</param>
+        /// <returns>This node.</returns>
+        public CoreNode WithSegwitWallet(string walletPassword = "password", string walletName = "mywallet", string walletPassphrase = "passphrase", string walletMnemonic = null)
+        {
+            this.builderWithDummyWallet = false;
+            this.builderWithWallet = true;
+            this.builderWithSegwitWallet = true;
+            this.builderWalletName = walletName;
+            this.builderWalletPassphrase = walletPassphrase;
+            this.builderWalletPassword = walletPassword;
+            this.builderWalletMnemonic = walletMnemonic;
+
             return this;
         }
 
@@ -445,7 +468,7 @@ namespace Blockcore.IntegrationTests.Common.EnvironmentMockUpHelpers
                     this.builderWalletPassword,
                     this.builderWalletName,
                     this.builderWalletPassphrase,
-                    string.IsNullOrEmpty(this.builderWalletMnemonic) ? null : new Mnemonic(this.builderWalletMnemonic));
+                    string.IsNullOrEmpty(this.builderWalletMnemonic) ? null : new Mnemonic(this.builderWalletMnemonic), purpose: this.builderWithSegwitWallet ? 84 : null);
             }
         }
 

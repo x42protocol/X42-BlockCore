@@ -1,10 +1,11 @@
 ﻿using System.Net;
 using Blockcore.Consensus.Chain;
 using Microsoft.AspNetCore.Mvc;
-using NBitcoin;
 using Blockcore.Features.Notifications.Interfaces;
+using Blockcore.NBitcoin;
 using Blockcore.Utilities.JsonErrors;
 using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 
 namespace Blockcore.Features.Notifications.Controllers
 {

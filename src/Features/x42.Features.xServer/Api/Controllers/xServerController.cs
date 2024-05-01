@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Blockcore.Features.Wallet;
 using System.Collections.Generic;
+using Asp.Versioning;
 
 namespace x42.Features.xServer.Api.Controllers
 {

@@ -1,4 +1,5 @@
 ﻿using System;
+using Blockcore.NBitcoin;
 using NBitcoin;
 
 namespace Blockcore.Features.Wallet.Api.Models.X42

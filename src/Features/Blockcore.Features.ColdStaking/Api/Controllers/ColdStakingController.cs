@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Net;
+using Asp.Versioning;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Features.ColdStaking.Api.Models;
 using Blockcore.Features.Wallet.Exceptions;
 using Blockcore.Features.Wallet.Interfaces;
 using Blockcore.Features.Wallet.Types;
+using Blockcore.NBitcoin;
 using Blockcore.Utilities;
 using Blockcore.Utilities.JsonErrors;
 using Blockcore.Utilities.ModelStateErrors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
 
 namespace Blockcore.Features.ColdStaking.Api.Controllers
 {
@@ -54,7 +55,7 @@ namespace Blockcore.Features.ColdStaking.Api.Controllers
         /// <returns>A <see cref="GetColdStakingInfoResponse"/> object containing the cold staking information.</returns>
         [Route("cold-staking-info")]
         [HttpGet]
-        public IActionResult GetColdStakingInfo([FromQuery] GetColdStakingInfoRequest request)
+        public IActionResult GetColdStakingInfo([FromQuery]GetColdStakingInfoRequest request)
         {
             Guard.NotNull(request, nameof(request));
 
@@ -92,10 +93,10 @@ namespace Blockcore.Features.ColdStaking.Api.Controllers
         /// <returns>A <see cref="CreateColdStakingAccountResponse>"/> object containing the account name.</returns>
         [Route("cold-staking-account")]
         [HttpPost]
-        public IActionResult CreateColdStakingAccount([FromBody] CreateColdStakingAccountRequest request)
+        public IActionResult CreateColdStakingAccount([FromBody]CreateColdStakingAccountRequest request)
         {
             Guard.NotNull(request, nameof(request));
-
+            
             // Checks that the request is valid.
             if (!this.ModelState.IsValid)
             {
@@ -131,10 +132,10 @@ namespace Blockcore.Features.ColdStaking.Api.Controllers
         /// <returns>A <see cref="GetColdStakingAddressResponse>"/> object containing the cold staking address.</returns>
         [Route("cold-staking-address")]
         [HttpGet]
-        public IActionResult GetColdStakingAddress([FromQuery] GetColdStakingAddressRequest request)
+        public IActionResult GetColdStakingAddress([FromQuery]GetColdStakingAddressRequest request)
         {
             Guard.NotNull(request, nameof(request));
-
+            
             // Checks that the request is valid.
             if (!this.ModelState.IsValid)
             {
@@ -148,7 +149,7 @@ namespace Blockcore.Features.ColdStaking.Api.Controllers
 
                 var model = new GetColdStakingAddressResponse
                 {
-                    Address = request.Segwit ? address?.Bech32Address : address?.Address
+                    Address = address?.Address
                 };
 
                 if (model.Address == null)
@@ -166,45 +167,6 @@ namespace Blockcore.Features.ColdStaking.Api.Controllers
         }
 
         /// <summary>
-        /// Gets profile address.
-        /// <param name="request">An object containing the necessary parameters to retrieve
-        /// the profile address.</param>
-        /// <returns>A JSON object containing the address for a profile account.</returns>
-        /// </summary>
-        [Route("getprofileaddress")]
-        [HttpGet]
-        public IActionResult GetProfileAddress([FromQuery] GetProfileAddressRequest request)
-        {
-            Guard.NotNull(request, nameof(request));
-
-            // Checks the request is valid.
-            if (!this.ModelState.IsValid)
-            {
-                return ModelStateErrors.BuildErrorResponse(this.ModelState);
-            }
-
-            try
-            {
-                var result = new GetColdStakingAddressResponse();
-                var account = this.ColdStakingManager.GetOrCreateColdStakingAccount(Uri.UnescapeDataString(request.WalletName), request.IsColdWalletAccount, Uri.UnescapeDataString(request.WalletPassword)).Name;
-                if (account != null)
-                {
-                    HdAddress address = this.ColdStakingManager.GetFirstColdStakingAddress(Uri.UnescapeDataString(request.WalletName), request.IsColdWalletAccount);
-                    if (address != null)
-                    {
-                        result.Address = request.Segwit ? address?.Bech32Address : address?.Address;
-                    }   
-                }
-                return this.Json(result);
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError("Exception occurred: {0}", e.ToString());
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
-        }
-
-        /// <summary>
         /// Spends funds from a normal wallet addresses to the cold staking script. It is expected that this
         /// spend will be detected by both the hot wallet and cold wallet and allow cold staking to occur using this
         /// transaction's output as input.
@@ -214,7 +176,7 @@ namespace Blockcore.Features.ColdStaking.Api.Controllers
         /// <seealso cref="ColdStakingManager.GetColdStakingScript(ScriptId, ScriptId)"/>
         [Route("setup-cold-staking")]
         [HttpPost]
-        public IActionResult SetupColdStaking([FromBody] SetupColdStakingRequest request)
+        public IActionResult SetupColdStaking([FromBody]SetupColdStakingRequest request)
         {
             return this.SetupColdStakingInternal(request, true);
         }
@@ -252,7 +214,7 @@ namespace Blockcore.Features.ColdStaking.Api.Controllers
 
                 Transaction transaction = this.ColdStakingManager.GetColdStakingSetupTransaction(
                     this.walletTransactionHandler, request.ColdWalletAddress, request.HotWalletAddress,
-                    request.WalletName, request.WalletAccount, request.WalletPassword, amount, feeAmount, request.SegwitChangeAddress, request.PayToScript, createHotAccount);
+                    request.WalletName, request.WalletAccount, request.WalletPassword, amount, feeAmount, request.PayToScript, createHotAccount);
 
                 var model = new SetupColdStakingResponse
                 {
@@ -279,10 +241,10 @@ namespace Blockcore.Features.ColdStaking.Api.Controllers
         /// <seealso cref="ColdStakingManager.GetColdStakingScript(ScriptId, ScriptId)"/>
         [Route("cold-staking-withdrawal")]
         [HttpPost]
-        public IActionResult ColdStakingWithdrawal([FromBody] ColdStakingWithdrawalRequest request)
+        public IActionResult ColdStakingWithdrawal([FromBody]ColdStakingWithdrawalRequest request)
         {
             Guard.NotNull(request, nameof(request));
-
+            
             // Checks the request is valid.
             if (!this.ModelState.IsValid)
             {

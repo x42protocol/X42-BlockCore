@@ -1,4 +1,6 @@
-﻿using Blockcore.Consensus;
+﻿using Asp.Versioning;
+using Blockcore.Connection;
+using Blockcore.Consensus;
 using Blockcore.Consensus.Chain;
 using Blockcore.Features.BlockStore;
 using Blockcore.Features.Wallet;
@@ -9,7 +11,6 @@ using Blockcore.Interfaces;
 using Blockcore.Networks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
 
 namespace Blockcore.Features.ColdStaking.Api.Controllers
 {
@@ -30,8 +31,9 @@ namespace Blockcore.Features.ColdStaking.Api.Controllers
             StoreSettings storeSettings,
             IWalletManager walletManager,
             WalletSettings walletSettings,
+            IConnectionManager connectionManager,
             IWalletTransactionHandler walletTransactionHandler) :
-            base(blockStore, broadcasterManager, chainIndexer, consensusManager, fullNode, loggerFactory, network, scriptAddressReader, storeSettings, walletManager, walletSettings, walletTransactionHandler)
+            base(blockStore, broadcasterManager, chainIndexer, consensusManager, fullNode, loggerFactory, network, scriptAddressReader, storeSettings, walletManager, walletSettings, connectionManager, walletTransactionHandler)
         {
         }
     }

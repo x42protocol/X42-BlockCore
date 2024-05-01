@@ -1,3 +1,104 @@
+##  (2023-05-15)
+
+* bump version ([3d8dc3a](https://github.com/block-core/blockcore/commit/3d8dc3a))
+* Move NBitcoin to namespace Blockcore.NBitcoin (#446) ([d6dd45b](https://github.com/block-core/blockcore/commit/d6dd45b)), closes [#446](https://github.com/block-core/blockcore/issues/446)
+
+
+
+##  (2023-04-16)
+
+* Add an interface to override services from the network class (#438) ([faa5f75](https://github.com/block-core/blockcore/commit/faa5f75)), closes [#438](https://github.com/block-core/blockcore/issues/438)
+* make sure cold staking legacy accounts default to bip44 ([729ec43](https://github.com/block-core/blockcore/commit/729ec43))
+* Update version and changelog ([9c4ff98](https://github.com/block-core/blockcore/commit/9c4ff98))
+
+
+
+##  (2023-02-02)
+
+* Fix big size blocks bug from NBitcoin ([880292e](https://github.com/block-core/blockcore/commit/880292e))
+* Fix not null warning ([f4f7330](https://github.com/block-core/blockcore/commit/f4f7330))
+* Update bitcoin checkpoints and defaultAssumeValid (#436) ([57a93a8](https://github.com/block-core/blockcore/commit/57a93a8)), closes [#436](https://github.com/block-core/blockcore/issues/436)
+* Update version and changelog ([213b2e8](https://github.com/block-core/blockcore/commit/213b2e8))
+
+
+
+##  (2022-10-24)
+
+* Add back the SBC and RSC launch settings ([5e529f3](https://github.com/block-core/blockcore/commit/5e529f3))
+* Adding BC flags for SHA512 hashes ([62f41df](https://github.com/block-core/blockcore/commit/62f41df))
+* Adding MOL blockchain (#423) ([91eaea8](https://github.com/block-core/blockcore/commit/91eaea8)), closes [#423](https://github.com/block-core/blockcore/issues/423)
+* Bump version and update change log ([d6f143a](https://github.com/block-core/blockcore/commit/d6f143a))
+* Enable blazor (#419) ([6829168](https://github.com/block-core/blockcore/commit/6829168)), closes [#419](https://github.com/block-core/blockcore/issues/419)
+* Ensure that configuration file for MOL is lower-case only ([d631c72](https://github.com/block-core/blockcore/commit/d631c72))
+* Ensure that folder name is lower-case for MOL ([7826a8d](https://github.com/block-core/blockcore/commit/7826a8d))
+* Ensure that impleumx test and regtest is lowercase ([f5fc937](https://github.com/block-core/blockcore/commit/f5fc937))
+* Remove empty solution folder ([4ab57b2](https://github.com/block-core/blockcore/commit/4ab57b2))
+* Remove the reload on change to reduce listeners handlers (OS resources) ([09be90a](https://github.com/block-core/blockcore/commit/09be90a))
+
+
+
+##  (2022-09-29)
+
+* Add additional checkpoint for City Chain ([f928dab](https://github.com/block-core/blockcore/commit/f928dab))
+* Configure reloadOnChange to be false ([229a3ed](https://github.com/block-core/blockcore/commit/229a3ed)), closes [#418](https://github.com/block-core/blockcore/issues/418)
+* Define a maximum tx fee or else zero few is required ([885634a](https://github.com/block-core/blockcore/commit/885634a))
+* Fix wallet to use segwit in the correct derivation path (#415) ([3ef32a7](https://github.com/block-core/blockcore/commit/3ef32a7)), closes [#415](https://github.com/block-core/blockcore/issues/415)
+* Update DNS and seed nodes for City Chain ([f0fc349](https://github.com/block-core/blockcore/commit/f0fc349))
+* Update version ([c36bf5e](https://github.com/block-core/blockcore/commit/c36bf5e))
+
+
+
+##  (2022-08-26)
+
+* add changelog ([5e5cde6](https://github.com/block-core/blockcore/commit/5e5cde6))
+* Add error handling for rpc trx broad cast (#413) ([405629b](https://github.com/block-core/blockcore/commit/405629b)), closes [#413](https://github.com/block-core/blockcore/issues/413)
+* Add UI for ban list (#408) ([6446575](https://github.com/block-core/blockcore/commit/6446575)), closes [#408](https://github.com/block-core/blockcore/issues/408)
+* Change Blockcore logo (#412) ([8a4157e](https://github.com/block-core/blockcore/commit/8a4157e)), closes [#412](https://github.com/block-core/blockcore/issues/412)
+* Preparing for cold staking pools (#410) ([f0cbd71](https://github.com/block-core/blockcore/commit/f0cbd71)), closes [#410](https://github.com/block-core/blockcore/issues/410)
+
+
+
+##  (2022-06-12)
+
+* bump version ([2a34841](https://github.com/block-core/blockcore/commit/2a34841))
+* Hidden Mining menu when there is no wallet (#405) ([58d4540](https://github.com/block-core/blockcore/commit/58d4540)), closes [#405](https://github.com/block-core/blockcore/issues/405)
+* Mine UI code correction (#406) ([ef8a08d](https://github.com/block-core/blockcore/commit/ef8a08d)), closes [#406](https://github.com/block-core/blockcore/issues/406)
+* Update TSBC Consensus and TRSC Consensus (#407) ([23be1a7](https://github.com/block-core/blockcore/commit/23be1a7)), closes [#407](https://github.com/block-core/blockcore/issues/407)
+
+
+
+##  (2022-05-18)
+
+* Add sign/verify schnorr using bouncy castle (#404) ([dd61fed](https://github.com/block-core/blockcore/commit/dd61fed)), closes [#404](https://github.com/block-core/blockcore/issues/404)
+
+
+
+##  (2022-05-13)
+
+* Synced PowLimit condition with Official XRC Node (#403) ([baf9929](https://github.com/block-core/blockcore/commit/baf9929)), closes [#403](https://github.com/block-core/blockcore/issues/403)
+
+
+
+##  (2022-05-10)
+
+* change nodes IP for SBC and RSC (#394) ([968052b](https://github.com/block-core/blockcore/commit/968052b)), closes [#394](https://github.com/block-core/blockcore/issues/394)
+* Coldstake redeem bug (#396) ([cfeda4a](https://github.com/block-core/blockcore/commit/cfeda4a)), closes [#396](https://github.com/block-core/blockcore/issues/396)
+* Node UI (#399) ([5e5c67a](https://github.com/block-core/blockcore/commit/5e5c67a)), closes [#399](https://github.com/block-core/blockcore/issues/399)
+* Update NuGet packages (#400) ([1a1c2ee](https://github.com/block-core/blockcore/commit/1a1c2ee)), closes [#400](https://github.com/block-core/blockcore/issues/400)
+* update SBC, RSC and CY logos (#401) ([25d68dc](https://github.com/block-core/blockcore/commit/25d68dc)), closes [#401](https://github.com/block-core/blockcore/issues/401)
+* XRC HardFork - X11, DigiShield POW algo (#402) ([59458b4](https://github.com/block-core/blockcore/commit/59458b4)), closes [#402](https://github.com/block-core/blockcore/issues/402)
+
+
+
+##  (2022-01-30)
+
+* add checkpoints to strax ([cc038cf](https://github.com/block-core/blockcore/commit/cc038cf))
+* Add endpoint to return the network weight for POS chains (#377) ([d4e38ee](https://github.com/block-core/blockcore/commit/d4e38ee)), closes [#377](https://github.com/block-core/blockcore/issues/377)
+* Enable staking on strax (#379) ([36f93cb](https://github.com/block-core/blockcore/commit/36f93cb)), closes [#379](https://github.com/block-core/blockcore/issues/379)
+* Upgrade for release 1.1.29 ([b21ac78](https://github.com/block-core/blockcore/commit/b21ac78))
+
+
+
 ##  (2021-11-21)
 
 * Add max tx fee to strax network ([7d13219](https://github.com/block-core/blockcore/commit/7d13219))

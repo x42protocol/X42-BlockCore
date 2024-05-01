@@ -9,11 +9,12 @@ using Blockcore.IntegrationTests.Common;
 using Blockcore.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Blockcore.IntegrationTests.Common.Extensions;
 using Blockcore.IntegrationTests.Common.TestNetworks;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.BIP32;
 using Blockcore.Networks;
 using Blockcore.Tests.Common;
 using Blockcore.Tests.Common.TestFramework;
 using FluentAssertions;
-using NBitcoin;
 using Xunit.Abstractions;
 
 namespace Blockcore.IntegrationTests.Wallet
@@ -109,7 +110,7 @@ namespace Blockcore.IntegrationTests.Wallet
         {
             ExtKey xPrivKey = node.Mnemonic.DeriveExtKey(WalletPassphrase);
             Key privateKey = xPrivKey.PrivateKey;
-            ExtPubKey xPublicKey = HdOperations.GetExtendedPublicKey(privateKey, xPrivKey.ChainCode, KnownCoinTypes.Bitcoin, 0);
+            ExtPubKey xPublicKey = HdOperations.GetExtendedPublicKey(privateKey, xPrivKey.ChainCode, 44, KnownCoinTypes.Bitcoin, 0);
             return xPublicKey;
         }
 

@@ -19,12 +19,6 @@ namespace Blockcore.Features.NodeHost.Hubs
             this.logger = loggerFactory.CreateLogger<NodeHub>();
         }
 
-        public override Task OnConnectedAsync()
-        {
-            this.logger.LogDebug("New client with id {id} connected", this.Context.ConnectionId);
-            return base.OnConnectedAsync();
-        }
-
         /// <summary>
         /// Basic echo method that can be used to verify connection.
         /// </summary>
@@ -32,12 +26,7 @@ namespace Blockcore.Features.NodeHost.Hubs
         /// <returns>Returns the same message supplied.</returns>
         public Task Echo(string message)
         {
-            if(this.Clients != null)
-            {
-                return this.Clients.Caller.SendAsync("xServerProvisioning", message);
-
-            }
-            return Task.CompletedTask;
+            return this.Clients.Caller.SendAsync("Echo", message);
         }
     }
 }

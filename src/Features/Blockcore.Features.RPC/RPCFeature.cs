@@ -10,12 +10,19 @@ using Blockcore.Networks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
 
 namespace Blockcore.Features.RPC
 {
-    public class RPCFeature : FullNodeFeature
+    public interface IRPCFeature
     {
+        IWebHost RPCHost { get; set; }
+    }
+
+    public class RPCFeature : FullNodeFeature, IRPCFeature
+    {
+        /// <summary>How long we are willing to wait for the NodeHost to stop.</summary>
+        private const int NodeHostStopTimeoutSeconds = 10;
+
         private readonly FullNode fullNode;
 
         private readonly NodeSettings nodeSettings;
@@ -25,6 +32,8 @@ namespace Blockcore.Features.RPC
         private readonly IFullNodeBuilder fullNodeBuilder;
 
         private readonly RpcSettings rpcSettings;
+
+        public IWebHost RPCHost { get; set; }
 
         public RPCFeature(IFullNodeBuilder fullNodeBuilder, FullNode fullNode, NodeSettings nodeSettings, ILoggerFactory loggerFactory, RpcSettings rpcSettings)
         {
@@ -69,7 +78,8 @@ namespace Blockcore.Features.RPC
             {
                 // TODO: The web host wants to create IServiceProvider, so build (but not start)
                 // earlier, if you want to use dependency injection elsewhere
-                this.fullNode.RPCHost = new WebHostBuilder()
+                
+                var webHost = new WebHostBuilder()
                 .UseKestrel(o => o.AllowSynchronousIO = true)
                 .ForFullNode(this.fullNode)
                 .UseUrls(this.rpcSettings.GetUrls())
@@ -105,7 +115,8 @@ namespace Blockcore.Features.RPC
                 .UseStartup<Startup>()
                 .Build();
 
-                this.fullNode.RPCHost.Start();
+                webHost.Start();
+                this.RPCHost = webHost;
                 this.logger.LogInformation("RPC listening on: " + Environment.NewLine + string.Join(Environment.NewLine, this.rpcSettings.GetUrls()));
             }
             else
@@ -114,6 +125,18 @@ namespace Blockcore.Features.RPC
             }
             
             return Task.CompletedTask;
+        }
+
+        /// <inheritdoc />
+        public override void Dispose()
+        {
+            // Make sure we are releasing the listening ip address / port.
+            if (this.RPCHost != null)
+            {
+                this.logger.LogInformation("Disposing RPC host.");
+                this.RPCHost.StopAsync(TimeSpan.FromSeconds(NodeHostStopTimeoutSeconds)).Wait();
+                this.RPCHost = null;
+            }
         }
     }
 
@@ -131,7 +154,11 @@ namespace Blockcore.Features.RPC
                 features
                 .AddFeature<RPCFeature>()
                 .DependOn<ConsensusFeature>()
-                .FeatureServices(services => services.AddSingleton(fullNodeBuilder));
+                .FeatureServices(services =>
+                {
+                    services.AddSingleton(fullNodeBuilder);
+                    services.AddSingleton<IRPCFeature>(provider => provider.GetService<RPCFeature>());
+                });
             });
 
             fullNodeBuilder.ConfigureServices(service =>

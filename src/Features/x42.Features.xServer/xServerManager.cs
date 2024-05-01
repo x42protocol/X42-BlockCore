@@ -17,7 +17,6 @@ using NBitcoin;
 using System.Net.Sockets;
 using System.Linq;
 using RestSharp.Serializers.NewtonsoftJson;
-using Blockcore.Networks;
 using Blockcore.Features.NodeHost.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json.Serialization;
@@ -27,6 +26,8 @@ using Polly.Retry;
 using Polly;
 using System.Xml.Linq;
 using x42.Features.xServer.Models.DNS;
+using Blockcore.Networks;
+using Blockcore.NBitcoin;
 
 namespace x42.Features.xServer
 {
@@ -926,7 +927,7 @@ namespace x42.Features.xServer
                 {
                     result.ResultMessage = "Not connected to any tier 2 servers";
                 }
-
+        
             }
             return result;
         }

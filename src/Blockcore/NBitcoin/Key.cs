@@ -3,12 +3,13 @@ using System.Linq;
 using System.Text;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
+using Blockcore.NBitcoin.BIP38;
+using Blockcore.NBitcoin.BouncyCastle.asn1.x9;
+using Blockcore.NBitcoin.BouncyCastle.math;
+using Blockcore.NBitcoin.Crypto;
 using Blockcore.Networks;
-using NBitcoin.BouncyCastle.Asn1.X9;
-using NBitcoin.BouncyCastle.Math;
-using NBitcoin.Crypto;
 
-namespace NBitcoin
+namespace Blockcore.NBitcoin
 {
     public class Key : IBitcoinSerializable, IDestination
     {
@@ -96,6 +97,13 @@ namespace NBitcoin
         public ECDSASignature Sign(uint256 hash)
         {
             return this._ECKey.Sign(hash);
+        }
+
+        public SchnorrSignature SignSchnorr(uint256 hash)
+        {
+            var signer = new SchnorrSigner();
+            return signer.Sign(hash, this);
+
         }
 
         /// <summary>

@@ -12,11 +12,13 @@ using Blockcore.Features.Wallet.Database;
 using Blockcore.Features.Wallet.Exceptions;
 using Blockcore.Features.Wallet.Tests;
 using Blockcore.Features.Wallet.Types;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.BIP32;
+using Blockcore.NBitcoin.BIP39;
+using Blockcore.NBitcoin.Crypto;
 using Blockcore.Networks;
 using Blockcore.Tests.Common;
 using DBreeze.Utils;
-using NBitcoin;
-using NBitcoin.Crypto;
 using Newtonsoft.Json;
 
 namespace Blockcore.Tests.Wallet.Common
@@ -245,11 +247,13 @@ namespace Blockcore.Tests.Wallet.Common
                     {
                         new HdAccount
                         {
+                            Purpose = 44,
                             ExternalAddresses = GenerateAddresses(count),
                             InternalAddresses = GenerateAddresses(count)
                         },
                         new HdAccount
                         {
+                            Purpose = 44,
                             ExternalAddresses = GenerateAddresses(count),
                             InternalAddresses = GenerateAddresses(count)
                         } }
@@ -262,8 +266,9 @@ namespace Blockcore.Tests.Wallet.Common
             return new HdAddress
             {
                 Index = index,
+                HdPath = "m/44'/0'/0'/0/0",
                 Address = addressName,
-                ScriptPubKey = new Script(),
+                ScriptPubKey = new Script()
                 //Transactions = new List<TransactionData>()
             };
         }
@@ -273,8 +278,9 @@ namespace Blockcore.Tests.Wallet.Common
             return new HdAddress
             {
                 Index = index,
+                HdPath = "m/44'/0'/0'/0/0",
                 Address = addressName,
-                ScriptPubKey = new Script(),
+                ScriptPubKey = new Script()
                 //Transactions = new List<TransactionData> { new TransactionData() }
             };
         }
@@ -289,7 +295,8 @@ namespace Blockcore.Tests.Wallet.Common
                 var address = new HdAddress
                 {
                     Address = key.ToString(),
-                    ScriptPubKey = key
+                    ScriptPubKey = key,
+                    HdPath = $"m/44'/0'/0'/0/{count}",
                 };
                 addresses.Add(address);
             }
@@ -440,6 +447,7 @@ namespace Blockcore.Tests.Wallet.Common
                 {
                     Address = key.PubKey.GetAddress(network).ToString(),
                     ScriptPubKey = key.ScriptPubKey,
+                    HdPath = "m/44'/0'/0'/0/0",
                 };
 
                 store.Add(new List<TransactionOutputData> {

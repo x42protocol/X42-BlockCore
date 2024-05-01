@@ -10,13 +10,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Blockcore.Consensus.BlockInfo;
 using Blockcore.Interfaces;
+using Blockcore.NBitcoin.BouncyCastle.math;
+using Blockcore.NBitcoin.DataEncoders;
+using Blockcore.NBitcoin.Protocol;
 using Blockcore.Networks;
 using Blockcore.P2P;
-using NBitcoin.BouncyCastle.Math;
-using NBitcoin.DataEncoders;
-using NBitcoin.Protocol;
+using NBitcoin;
 
-namespace NBitcoin
+namespace Blockcore.NBitcoin
 {
     public static class Extensions
     {
@@ -366,7 +367,7 @@ namespace NBitcoin
             ms.Write(bytes, 0, bytes.Length);
         }
 
-        internal static Array BigIntegerToBytes(BigInteger b, int numBytes)
+        internal static byte[] BigIntegerToBytes(BigInteger b, int numBytes)
         {
             if (b == null)
             {

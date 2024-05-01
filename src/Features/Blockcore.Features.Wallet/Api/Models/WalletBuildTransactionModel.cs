@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Blockcore.NBitcoin;
 using Blockcore.Utilities.JsonConverters;
-using NBitcoin;
 using Newtonsoft.Json;
 
 namespace Blockcore.Features.Wallet.Api.Models
@@ -16,8 +15,5 @@ namespace Blockcore.Features.Wallet.Api.Models
         [JsonProperty(PropertyName = "transactionId")]
         [JsonConverter(typeof(UInt256JsonConverter))]
         public uint256 TransactionId { get; set; }
-
-        [JsonProperty(PropertyName = "inputAddress")]
-        public string InputAddress { get; set; }
     }
 }

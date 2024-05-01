@@ -14,11 +14,11 @@ using Blockcore.Features.Dns;
 using Blockcore.Features.Miner.Interfaces;
 using Blockcore.Persistence;
 using Blockcore.Features.Notifications;
-using x42.Features.xServer;
 using Blockcore.Features.WalletWatchOnly;
 using Blockcore.Networks.X1.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using x42.Features.xServer;
 
 namespace Blockcore.Node
 {
@@ -54,6 +54,7 @@ namespace Blockcore.Node
                 case "XDS":
                 case "XLR":
                 case "IMPLX":
+                case "MOL":
                 case "HOME":
                 case "SERF":
                 case "CYBITS":

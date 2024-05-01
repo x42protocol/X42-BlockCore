@@ -19,6 +19,7 @@ jobs:
     env:
       SOLUTION_PATH: 'src/Blockcore.sln'
       BUILD_CONFIGURATION: 'Release'
+      DYLD_LIBRARY_PATH: "/System/Volumes/Data/opt/homebrew/lib"
 
     steps:
 
@@ -28,14 +29,18 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: | 
-          6.0.x
+          8.0.x
 
+    - name: Install LevelDB
+      if: matrix.os == 'macos-latest'
+      run: brew install leveldb snappy gperftools
+    
     - name: Restore
       run: dotnet restore ${{env.SOLUTION_PATH}}
       
     - name: Build
       run: dotnet build -c ${{env.BUILD_CONFIGURATION}} -v m ${{env.SOLUTION_PATH}}
-      
+
     - name: Unit Test
       run: dotnet test -v=normal --filter "FullyQualifiedName!~IntegrationTests&Unstable!=True" -c ${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_PATH}}
 

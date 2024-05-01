@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Blockcore.NBitcoin;
 using Blockcore.Utilities.JsonConverters;
-using NBitcoin;
 using Newtonsoft.Json;
 
 namespace Blockcore.Features.Wallet.Api.Models
@@ -37,6 +37,12 @@ namespace Blockcore.Features.Wallet.Api.Models
         /// </summary>
         [JsonProperty(PropertyName = "address")]
         public string Address { get; set; }
+
+        /// <summary>
+        /// The script.
+        /// </summary>
+        [JsonProperty(PropertyName = "script")]
+        public string Script { get; set; }
 
         /// <summary>
         /// A value indicating whether this address is a change address.

@@ -83,7 +83,6 @@ namespace Blockcore.Features.BlockStore
             this.prunedBlockRepository = prunedBlockRepository;
             this.addressIndexer = addressIndexer;
             this.pruneBlockStoreService = pruneBlockStoreService;
-
             nodeStats.RegisterStats(this.AddInlineStats, StatsType.Inline, this.GetType().Name, 900);
         }
 

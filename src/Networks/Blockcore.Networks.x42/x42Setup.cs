@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Blockcore.Consensus.Checkpoints;
+using Blockcore.NBitcoin;
 using Blockcore.Networks.x42.Networks.Setup;
-using NBitcoin;
 
 namespace Blockcore.Networks.x42
 {
@@ -62,7 +62,6 @@ namespace Blockcore.Networks.x42
                 { 500000, new CheckpointInfo(new uint256("0x7f9a88ebb32f47090ec37a110c5a05c1162a604dfbfb69c8d492e771cdb63289"), new uint256("0x19db6890c5c934e883bc99eb197509b0a81f19faeefcf49fd7fa6dab83644bfb")) },
                 { 800000, new CheckpointInfo(new uint256("0x981083b047ecf8157a8b2dc24e17ca8cfad01b4e2dabc314df97f3b64fdf37f5"), new uint256("0xf3f0a821801b32c73a7c4f42416ddad3f74b732bd517c968a9b93a33d3684e0b")) },
                 { 1000000, new CheckpointInfo(new uint256("0x1f5900bc62ddc11a383f8602d744fab1afa1e1969f0bf7f6b1b161476739a35e"), new uint256("0xca5fcf25a5561ebc91c5624b7c5ff697060f8a613e53e7a7e90abac925324e39")) },
-                { 1200000, new CheckpointInfo(new uint256("0x183585d27df96ee7acbfa55354a6a87827155fe24b0647791e9e81e45c9ec409"), new uint256("0x891e78eb5ede58c0a909c6af8581c46263a3b0bb94a5f69a0165c8492071e8c6")) },
                 { 1600000, new CheckpointInfo(new uint256("0x8940e8e27b166eaf9527184c60502f0c4aaa92c0cbec92dfaad743533a918488"), new uint256("0x3b438c0b3a00778089ab884926f83fd37e764d83cc4cc4616b6f662f5e6e558f")) },
                 { 2200000, new CheckpointInfo(new uint256("0x7c3684c0122efa6120bbfdf814825b9f7858947c789674bab6a2d1f23d98850f"), new uint256("0x458d4a6e4cf63f40fdde16c8999efde536c707431b408fa2c006ebebdab55d1c")) },
             }
@@ -107,15 +106,15 @@ namespace Blockcore.Networks.x42
             PubKeyAddress = 65,
             ScriptAddress = 196,
             SecretAddress = 65 + 128,
-            GenesisTime = 1652054199,
+            GenesisTime = 1591458972,
             GenesisNonce = 2433759,
             GenesisBits = new Target(new uint256("0000ffff00000000000000000000000000000000000000000000000000000000")),
             GenesisVersion = 1,
             GenesisReward = Money.Zero,
-            HashGenesisBlock = "0x8cfb6674e48320009b1228644fab3fe850d53d073689365c1ecad55d8f77b504",
-            HashMerkleRoot = "0x1d825dbc2ff5f9078885824347d231e54d72733779b0a3563b457c19368018ae",
+            HashGenesisBlock = "0xa92bf124a1e6f237015440d5f1e1999bdef8e321f2d3fdc367eb2f7733b17854",
+            HashMerkleRoot = "0xd0695e2d2562e7054b599c053fad4a72997f2e9629a2f9760e57584cf850ae57",
             DNS = new[] { "testnet1.x42seed.host" },
-            Nodes = new[] { "18.138.31.117" },
+            Nodes = new[] { "63.32.82.169", "35.155.194.159" },
             Checkpoints = new Dictionary<int, CheckpointInfo>
             {
                 { 0, new CheckpointInfo(new uint256("0x11bd504102b42b24680d7b4f9b9e9521adc1b690253494d108193cdfcdd2ef0b"), new uint256("0x0000000000000000000000000000000000000000000000000000000000000000")) }, // Genisis

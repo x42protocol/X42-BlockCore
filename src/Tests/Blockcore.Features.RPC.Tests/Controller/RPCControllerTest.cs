@@ -7,6 +7,7 @@ using System.Text;
 using Blockcore.Configuration;
 using Blockcore.Features.RPC.Controllers;
 using Blockcore.Features.RPC.Models;
+using Blockcore.NBitcoin;
 using Blockcore.Networks;
 using Blockcore.Tests.Common;
 using Blockcore.Tests.Common.Logging;
@@ -19,7 +20,6 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Primitives;
 using Moq;
-using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -35,6 +35,7 @@ namespace Blockcore.Features.RPC.Tests.Controller
         private readonly RPCController controller;
         private readonly Mock<IRPCClientFactory> rpcClientFactory;
         private readonly Mock<IWebHost> rpcHost;
+        private readonly Mock<IRPCFeature> rpcFeature;
         private readonly Mock<IServiceProvider> serviceProvider;
         private readonly Mock<IActionDescriptorCollectionProvider> actionDescriptorCollectionProvider;
         private readonly Mock<IRPCClient> rpcClient;
@@ -58,7 +59,8 @@ namespace Blockcore.Features.RPC.Tests.Controller
             this.rpcClientFactory.Setup(r => r.Create(It.IsAny<RpcSettings>(), It.Is<Uri>(u => u.ToString() == "http://127.0.0.1:0/"), It.IsAny<Network>()))
                 .Returns(this.rpcClient.Object);
 
-            this.fullNode.Setup(f => f.RPCHost)
+            this.rpcFeature = new Mock<IRPCFeature>();
+            this.rpcFeature.Setup(f => f.RPCHost)
                 .Returns(this.rpcHost.Object);
             this.rpcHost.Setup(c => c.Services)
                 .Returns(this.serviceProvider.Object);
@@ -72,7 +74,7 @@ namespace Blockcore.Features.RPC.Tests.Controller
                     return new ActionDescriptorCollection(this.descriptors, 0);
                 });
 
-            this.controller = new RPCController(this.fullNode.Object, this.LoggerFactory.Object, this.rpcSettings, this.rpcClientFactory.Object);
+            this.controller = new RPCController(this.fullNode.Object, this.LoggerFactory.Object, this.rpcSettings, this.rpcClientFactory.Object, this.rpcFeature.Object);
         }
 
         [Fact]
@@ -120,7 +122,7 @@ namespace Blockcore.Features.RPC.Tests.Controller
         [Fact]
         public void ListMethods_WithException_ReturnsErrorResult()
         {
-            this.fullNode.Setup(f => f.RPCHost)
+            this.rpcFeature.Setup(f => f.RPCHost)
                 .Throws(new InvalidOperationException("Could not find RPCHost"));
 
             IActionResult controllerResult = this.controller.ListMethods();
@@ -201,7 +203,7 @@ namespace Blockcore.Features.RPC.Tests.Controller
         [Fact]
         public void CallByName_WithException_ReturnsErrorResult()
         {
-            this.fullNode.Setup(f => f.RPCHost)
+            this.rpcFeature.Setup(f => f.RPCHost)
                .Throws(new InvalidOperationException("Could not find RPCHost"));
 
             var body = JObject.FromObject(new { methodName = "getblockheader" });

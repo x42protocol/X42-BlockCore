@@ -13,7 +13,6 @@ using Blockcore.Networks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
 
 namespace Blockcore.Features.NodeHost
 {
@@ -129,6 +128,10 @@ namespace Blockcore.Features.NodeHost
                     services.AddSingleton<NodeHostSettings>();
                     services.AddSingleton<IEventsSubscriptionService, EventSubscriptionService>();
                     services.AddSingleton<ICertificateStore, CertificateStore>();
+
+                    // Controller
+                    services.AddTransient<Blockcore.Controllers.NodeController>();
+
                 });
             });
 

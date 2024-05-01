@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Blockcore.Configuration;
+using Blockcore.Connection;
 using Blockcore.Connection.Broadcasting;
 using Blockcore.Consensus;
 using Blockcore.Consensus.Chain;
@@ -15,8 +16,6 @@ using Blockcore.Tests.Common;
 using Blockcore.Tests.Common.Logging;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Moq;
-using NBitcoin;
-
 using Xunit;
 
 namespace Blockcore.Features.RPC.Tests.Controller
@@ -36,6 +35,7 @@ namespace Blockcore.Features.RPC.Tests.Controller
         private readonly Mock<IFullNode> fullNode;
         private readonly Mock<IScriptAddressReader> scriptAddressReader;
         private readonly Mock<IWalletManager> walletManager;
+        private readonly Mock<IConnectionManager> connectionManager;
         private readonly Mock<IWalletTransactionHandler> walletTransactionHandler;
 
         public WalletRPCControllerTests()
@@ -50,6 +50,7 @@ namespace Blockcore.Features.RPC.Tests.Controller
             this.storeSettings = new StoreSettings(this.nodeSettings);
             this.walletManager = new Mock<IWalletManager>();
             this.walletSettings = new WalletSettings(this.nodeSettings);
+            this.connectionManager = new Mock<IConnectionManager>();
             this.walletTransactionHandler = new Mock<IWalletTransactionHandler>();
             this.chain = new ChainIndexer();
 
@@ -66,6 +67,7 @@ namespace Blockcore.Features.RPC.Tests.Controller
                         this.storeSettings,
                         this.walletManager.Object,
                         this.walletSettings,
+                        this.connectionManager.Object,
                         this.walletTransactionHandler.Object
                         );
         }

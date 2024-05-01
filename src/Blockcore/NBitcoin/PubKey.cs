@@ -2,15 +2,15 @@
 using System.Linq;
 using System.Text;
 using Blockcore.Consensus.ScriptInfo;
+using Blockcore.NBitcoin.BouncyCastle.asn1.x9;
+using Blockcore.NBitcoin.BouncyCastle.crypto.parameters;
+using Blockcore.NBitcoin.BouncyCastle.math;
+using Blockcore.NBitcoin.BouncyCastle.math.ec;
+using Blockcore.NBitcoin.Crypto;
+using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.Networks;
-using NBitcoin.BouncyCastle.Asn1.X9;
-using NBitcoin.BouncyCastle.Crypto.Parameters;
-using NBitcoin.BouncyCastle.Math;
-using NBitcoin.BouncyCastle.Math.EC;
-using NBitcoin.Crypto;
-using NBitcoin.DataEncoders;
 
-namespace NBitcoin
+namespace Blockcore.NBitcoin
 {
     public class PubKey : IBitcoinSerializable, IDestination
     {
@@ -61,7 +61,7 @@ namespace NBitcoin
 
         private ECKey _ECKey;
 
-        private ECKey ECKey
+        internal ECKey ECKey
         {
             get
             {
@@ -165,6 +165,17 @@ namespace NBitcoin
         {
             Script redeem = PayToPubkeyTemplate.Instance.GenerateScriptPubKey(this);
             return new BitcoinScriptAddress(redeem.Hash, network);
+        }
+
+        public bool Verify(uint256 hash, SchnorrSignature sig)
+        {
+            if (sig == null)
+                throw new ArgumentNullException(nameof(sig));
+            if (hash == null)
+                throw new ArgumentNullException(nameof(hash));
+
+            SchnorrSigner signer = new SchnorrSigner();
+            return signer.Verify(hash, this, sig);
         }
 
         public bool Verify(uint256 hash, ECDSASignature sig)

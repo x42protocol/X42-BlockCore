@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Asp.Versioning;
 using Blockcore.Base;
 using Blockcore.Base.Deployments;
 using Blockcore.Base.Deployments.Models;
@@ -19,13 +20,13 @@ using Blockcore.Features.RPC.Exceptions;
 using Blockcore.Features.RPC.ModelBinders;
 using Blockcore.Features.RPC.Models;
 using Blockcore.Interfaces;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.Networks;
 using Blockcore.Utilities;
 using Blockcore.Utilities.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
-using NBitcoin.DataEncoders;
 
 namespace Blockcore.Features.RPC.Controllers
 {
@@ -50,8 +51,14 @@ namespace Blockcore.Features.RPC.Controllers
         /// <summary>An interface implementation used to retrieve the network difficulty target.</summary>
         private readonly INetworkDifficulty networkDifficulty;
 
+        /// <summary>An interface implementation used to retrieve the total network weight.</summary>
+        private readonly INetworkWeight networkWeight;
+
         /// <summary>An interface implementation for the blockstore.</summary>
         private readonly IBlockStore blockStore;
+
+        /// <summary>A interface implementation for the initial block download state.</summary>
+        private readonly IInitialBlockDownloadState ibdState;
 
         private readonly IStakeChain stakeChain;
 
@@ -69,7 +76,9 @@ namespace Blockcore.Features.RPC.Controllers
             IConnectionManager connectionManager = null,
             IConsensusManager consensusManager = null,
             IBlockStore blockStore = null,
-            IStakeChain stakeChain = null)
+            IInitialBlockDownloadState ibdState = null,
+            IStakeChain stakeChain = null,
+            INetworkWeight networkWeight = null)
             : base(
                   fullNode: fullNode,
                   network: network,
@@ -85,7 +94,9 @@ namespace Blockcore.Features.RPC.Controllers
             this.getUnspentTransaction = getUnspentTransaction;
             this.networkDifficulty = networkDifficulty;
             this.blockStore = blockStore;
+            this.ibdState = ibdState;
             this.stakeChain = stakeChain;
+            this.networkWeight = networkWeight;
         }
 
         /// <summary>
@@ -446,6 +457,91 @@ namespace Blockcore.Features.RPC.Controllers
             return networkInfoModel;
         }
 
+        [ActionName("getblockchaininfo")]
+        [ActionDescription("Returns an object containing various state info regarding blockchain processing.")]
+        public BlockchainInfoModel GetBlockchainInfo()
+        {
+            var blockchainInfo = new BlockchainInfoModel
+            {
+                Chain = this.Network?.Name,
+                Blocks = (uint)(this.ChainState?.ConsensusTip?.Height ?? 0),
+                Headers = (uint)(this.ChainIndexer?.Height ?? 0),
+                BestBlockHash = this.ChainState?.ConsensusTip?.HashBlock,
+                Difficulty = this.GetNetworkDifficulty()?.Difficulty ?? 0.0,
+                NetworkWeight = (long)this.GetPosNetworkWeight(),
+                MedianTime = this.ChainState?.ConsensusTip?.GetMedianTimePast().ToUnixTimeSeconds() ?? 0,
+                VerificationProgress = 0.0,
+                IsInitialBlockDownload = this.ibdState?.IsInitialBlockDownload() ?? true,
+                Chainwork = this.ChainState?.ConsensusTip?.ChainWork,
+                IsPruned = false
+            };
+
+            if (blockchainInfo.Headers > 0)
+            {
+                blockchainInfo.VerificationProgress = (double)blockchainInfo.Blocks / blockchainInfo.Headers;
+            }
+
+            // softfork deployments
+            blockchainInfo.SoftForks = new List<SoftForks>();
+
+            foreach (var consensusBuriedDeployment in Enum.GetValues(typeof(BuriedDeployments)))
+            {
+                bool active = this.ChainIndexer.Height >= this.Network.Consensus.BuriedDeployments[(BuriedDeployments)consensusBuriedDeployment];
+                blockchainInfo.SoftForks.Add(new SoftForks
+                {
+                    Id = consensusBuriedDeployment.ToString().ToLower(),
+                    Version = (int)consensusBuriedDeployment + 2, // hack to get the deployment number similar to bitcoin core without changing the enums
+                    Status = new SoftForksStatus { Status = active }
+                });
+            }
+
+            // softforkbip9 deployments
+            blockchainInfo.SoftForksBip9 = new Dictionary<string, SoftForksBip9>();
+
+            ConsensusRuleEngine ruleEngine = (ConsensusRuleEngine)this.ConsensusManager.ConsensusRules;
+            ThresholdState[] thresholdStates = ruleEngine.NodeDeployments.BIP9.GetStates(this.ChainIndexer.Tip.Previous);
+            List<ThresholdStateModel> metrics = ruleEngine.NodeDeployments.BIP9.GetThresholdStateMetrics(this.ChainIndexer.Tip.Previous, thresholdStates);
+
+            foreach (ThresholdStateModel metric in metrics.Where(m => !m.DeploymentName.ToLower().Contains("test"))) // to remove the test dummy
+            {
+                // TODO: Deployment timeout may not be implemented yet
+
+                // Deployments with timeout value of 0 are hidden.
+                // A timeout value of 0 guarantees a softfork will never be activated.
+                // This is used when softfork codes are merged without specifying the deployment schedule.
+                if (metric.TimeTimeOut?.Ticks > 0)
+                    blockchainInfo.SoftForksBip9.Add(metric.DeploymentName, this.CreateSoftForksBip9(metric, thresholdStates[metric.DeploymentIndex]));
+            }
+
+            // TODO: Implement blockchainInfo.warnings
+            return blockchainInfo;
+        }
+
+        private SoftForksBip9 CreateSoftForksBip9(ThresholdStateModel metric, ThresholdState state)
+        {
+            var softForksBip9 = new SoftForksBip9()
+            {
+                Status = metric.ThresholdState.ToLower(),
+                Bit = this.Network.Consensus.BIP9Deployments[metric.DeploymentIndex].Bit,
+                StartTime = metric.TimeStart?.ToUnixTimestamp() ?? 0,
+                Timeout = metric.TimeTimeOut?.ToUnixTimestamp() ?? 0,
+                Since = metric.SinceHeight
+            };
+
+            if (state == ThresholdState.Started)
+            {
+                softForksBip9.Statistics = new SoftForksBip9Statistics();
+
+                softForksBip9.Statistics.Period = metric.ConfirmationPeriod;
+                softForksBip9.Statistics.Threshold = (int)metric.Threshold;
+                softForksBip9.Statistics.Count = metric.Blocks;
+                softForksBip9.Statistics.Elapsed = metric.Height - metric.PeriodStartHeight;
+                softForksBip9.Statistics.Possible = (softForksBip9.Statistics.Period - softForksBip9.Statistics.Threshold) >= (softForksBip9.Statistics.Elapsed - softForksBip9.Statistics.Count);
+            }
+
+            return softForksBip9;
+        }
+
         private ChainedHeader GetTransactionBlock(uint256 trxid)
         {
             ChainedHeader block = null;
@@ -460,6 +556,11 @@ namespace Blockcore.Features.RPC.Controllers
         private Target GetNetworkDifficulty()
         {
             return this.networkDifficulty?.GetNetworkDifficulty();
+        }
+
+        private double GetPosNetworkWeight()
+        {
+            return this.networkWeight?.GetPosNetworkWeight() ?? 0;
         }
     }
 }

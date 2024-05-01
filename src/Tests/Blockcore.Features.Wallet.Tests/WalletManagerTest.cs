@@ -16,6 +16,9 @@ using Blockcore.Features.Wallet.Helpers;
 using Blockcore.Features.Wallet.Interfaces;
 using Blockcore.Features.Wallet.Types;
 using Blockcore.Interfaces;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.BIP32;
+using Blockcore.NBitcoin.BIP39;
 using Blockcore.Networks;
 using Blockcore.Tests.Common;
 using Blockcore.Tests.Common.Logging;
@@ -25,11 +28,16 @@ using Blockcore.Utilities.JsonConverters;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NBitcoin;
-using NBitcoin.Protocol;
 using Newtonsoft.Json;
 using NLog.Time;
 using Xunit;
+using BitcoinPubKeyAddress = Blockcore.NBitcoin.BitcoinPubKeyAddress;
+using BitcoinSecret = Blockcore.NBitcoin.BitcoinSecret;
+using ExtKey = Blockcore.NBitcoin.BIP32.ExtKey;
+using ISecret = Blockcore.NBitcoin.ISecret;
+using Key = Blockcore.NBitcoin.Key;
+using Money = Blockcore.NBitcoin.Money;
+using uint256 = Blockcore.NBitcoin.uint256;
 
 namespace Blockcore.Features.Wallet.Tests
 {
@@ -112,7 +120,7 @@ namespace Blockcore.Features.Wallet.Tests
                     for (int k = 0; k < actualAccount.InternalAddresses.Count; k++)
                     {
                         HdAddress actualAddress = actualAccount.InternalAddresses.ElementAt(k);
-                        PubKey expectedAddressPubKey = ExtPubKey.Parse(expectedExtendedPubKey).Derive(new KeyPath($"1/{k}")).PubKey;
+                        NBitcoin.PubKey expectedAddressPubKey = ExtPubKey.Parse(expectedExtendedPubKey).Derive(new KeyPath($"1/{k}")).PubKey;
                         BitcoinPubKeyAddress expectedAddress = expectedAddressPubKey.GetAddress(expectedWallet.Network);
                         Assert.Equal(k, actualAddress.Index);
                         Assert.Equal(expectedAddress.ScriptPubKey, actualAddress.ScriptPubKey);
@@ -125,7 +133,7 @@ namespace Blockcore.Features.Wallet.Tests
                     for (int l = 0; l < actualAccount.ExternalAddresses.Count; l++)
                     {
                         HdAddress actualAddress = actualAccount.ExternalAddresses.ElementAt(l);
-                        PubKey expectedAddressPubKey = ExtPubKey.Parse(expectedExtendedPubKey).Derive(new KeyPath($"0/{l}")).PubKey;
+                        NBitcoin.PubKey expectedAddressPubKey = ExtPubKey.Parse(expectedExtendedPubKey).Derive(new KeyPath($"0/{l}")).PubKey;
                         BitcoinPubKeyAddress expectedAddress = expectedAddressPubKey.GetAddress(expectedWallet.Network);
                         Assert.Equal(l, actualAddress.Index);
                         Assert.Equal(expectedAddress.ScriptPubKey, actualAddress.ScriptPubKey);
@@ -207,7 +215,7 @@ namespace Blockcore.Features.Wallet.Tests
                     for (int k = 0; k < actualAccount.InternalAddresses.Count; k++)
                     {
                         HdAddress actualAddress = actualAccount.InternalAddresses.ElementAt(k);
-                        PubKey expectedAddressPubKey = ExtPubKey.Parse(expectedExtendedPubKey).Derive(new KeyPath($"1/{k}")).PubKey;
+                        NBitcoin.PubKey expectedAddressPubKey = ExtPubKey.Parse(expectedExtendedPubKey).Derive(new KeyPath($"1/{k}")).PubKey;
                         BitcoinPubKeyAddress expectedAddress = expectedAddressPubKey.GetAddress(expectedWallet.Network);
                         Assert.Equal(k, actualAddress.Index);
                         Assert.Equal(expectedAddress.ScriptPubKey, actualAddress.ScriptPubKey);
@@ -220,7 +228,7 @@ namespace Blockcore.Features.Wallet.Tests
                     for (int l = 0; l < actualAccount.ExternalAddresses.Count; l++)
                     {
                         HdAddress actualAddress = actualAccount.ExternalAddresses.ElementAt(l);
-                        PubKey expectedAddressPubKey = ExtPubKey.Parse(expectedExtendedPubKey).Derive(new KeyPath($"0/{l}")).PubKey;
+                        NBitcoin.PubKey expectedAddressPubKey = ExtPubKey.Parse(expectedExtendedPubKey).Derive(new KeyPath($"0/{l}")).PubKey;
                         BitcoinPubKeyAddress expectedAddress = expectedAddressPubKey.GetAddress(expectedWallet.Network);
                         Assert.Equal(l, actualAddress.Index);
                         Assert.Equal(expectedAddress.ScriptPubKey, actualAddress.ScriptPubKey);
@@ -627,7 +635,7 @@ namespace Blockcore.Features.Wallet.Tests
             Types.Wallet wallet = this.walletFixture.GenerateBlankWallet("testWallet", "password");
             wallet.AccountsRoot.ElementAt(0).Accounts.Clear();
 
-            HdAccount result = wallet.AddNewAccount("password", DateTimeOffset.UtcNow);
+            HdAccount result = wallet.AddNewAccount("password", DateTimeOffset.UtcNow, 44);
 
             Assert.Equal(1, wallet.AccountsRoot.ElementAt(0).Accounts.Count);
             var extKey = new ExtKey(Key.Parse(wallet.EncryptedSeed, "password", wallet.Network), wallet.ChainCode);
@@ -635,6 +643,29 @@ namespace Blockcore.Features.Wallet.Tests
             Assert.Equal($"account 0", result.Name);
             Assert.Equal(0, result.Index);
             Assert.Equal($"m/44'/0'/0'", result.HdPath);
+            Assert.Equal(expectedExtendedPubKey, result.ExtendedPubKey);
+            Assert.Equal(0, result.InternalAddresses.Count);
+            Assert.Equal(0, result.ExternalAddresses.Count);
+        }
+
+        [Fact]
+        public void CreateNewBIP84AccountGivenNoAccountsExistingInWalletCreatesNewAccount()
+        {
+            DataFolder dataFolder = CreateDataFolder(this);
+
+            var walletManager = new WalletManager(this.LoggerFactory.Object, this.Network, new Mock<ChainIndexer>().Object, new WalletSettings(NodeSettings.Default(this.Network)),
+                dataFolder, new Mock<IWalletFeePolicy>().Object, new Mock<IAsyncProvider>().Object, new NodeLifetime(), DateTimeProvider.Default, new ScriptAddressReader());
+            Types.Wallet wallet = this.walletFixture.GenerateBlankWallet("testWallet", "password");
+            wallet.AccountsRoot.ElementAt(0).Accounts.Clear();
+
+            HdAccount result = wallet.AddNewAccount("password", DateTimeOffset.UtcNow, 84);
+
+            Assert.Equal(1, wallet.AccountsRoot.ElementAt(0).Accounts.Count);
+            var extKey = new ExtKey(Key.Parse(wallet.EncryptedSeed, "password", wallet.Network), wallet.ChainCode);
+            string expectedExtendedPubKey = extKey.Derive(new KeyPath($"m/84'/0'/0'")).Neuter().ToString(wallet.Network);
+            Assert.Equal($"account 0", result.Name);
+            Assert.Equal(0, result.Index);
+            Assert.Equal($"m/84'/0'/0'", result.HdPath);
             Assert.Equal(expectedExtendedPubKey, result.ExtendedPubKey);
             Assert.Equal(0, result.InternalAddresses.Count);
             Assert.Equal(0, result.ExternalAddresses.Count);
@@ -651,7 +682,7 @@ namespace Blockcore.Features.Wallet.Tests
             Types.Wallet wallet = this.walletFixture.GenerateBlankWallet("testWallet", "password");
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount { Name = "unused" });
 
-            HdAccount result = wallet.AddNewAccount("password", DateTimeOffset.UtcNow);
+            HdAccount result = wallet.AddNewAccount("password", DateTimeOffset.UtcNow, 44);
 
             Assert.Equal(2, wallet.AccountsRoot.ElementAt(0).Accounts.Count);
             var extKey = new ExtKey(Key.Parse(wallet.EncryptedSeed, "password", wallet.Network), wallet.ChainCode);
@@ -784,6 +815,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "myAccount",
                 HdPath = "m/44'/0'/0'",
                 ExtendedPubKey = accountExtendedPubKey,
@@ -810,6 +842,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "myAccount",
                 HdPath = "m/44'/0'/0'",
                 ExternalAddresses = new List<HdAddress>
@@ -835,7 +868,7 @@ namespace Blockcore.Features.Wallet.Tests
 
             var keyPath = new KeyPath($"0/1");
             ExtPubKey extPubKey = ExtPubKey.Parse(accountExtendedPubKey).Derive(keyPath);
-            PubKey pubKey = extPubKey.PubKey;
+            NBitcoin.PubKey pubKey = extPubKey.PubKey;
             BitcoinPubKeyAddress address = pubKey.GetAddress(wallet.Network);
             Assert.Equal(1, result.Index);
             Assert.Equal("m/44'/0'/0'/0/1", result.HdPath);
@@ -855,6 +888,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "myAccount",
                 HdPath = "m/44'/0'/0'",
                 ExternalAddresses = new List<HdAddress>
@@ -898,6 +932,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "myAccount",
                 HdPath = "m/44'/0'/0'",
                 ExternalAddresses = new List<HdAddress>
@@ -940,6 +975,7 @@ namespace Blockcore.Features.Wallet.Tests
             var account = new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "myAccount",
                 HdPath = "m/44'/0'/0'",
                 ExternalAddresses = new List<HdAddress>
@@ -985,6 +1021,7 @@ namespace Blockcore.Features.Wallet.Tests
             var account = new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "myAccount",
                 HdPath = "m/44'/0'/0'",
                 ExternalAddresses = new List<HdAddress>(),
@@ -1328,6 +1365,7 @@ namespace Blockcore.Features.Wallet.Tests
             data.wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 ExternalAddresses = new List<HdAddress> {
                     address
                 },
@@ -1359,6 +1397,7 @@ namespace Blockcore.Features.Wallet.Tests
                 data.wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
                 {
                     Index = 0,
+                    Purpose = 44,
                     ExternalAddresses = new List<HdAddress>(),
                     InternalAddresses = new List<HdAddress>(),
                     Name = "savings account"
@@ -1377,9 +1416,9 @@ namespace Blockcore.Features.Wallet.Tests
 
             Types.Wallet wallet = this.walletFixture.GenerateBlankWallet("myWallet1", "password");
             (ExtKey ExtKey, string ExtPubKey) accountKeys = WalletTestsHelpers.GenerateAccountKeys(wallet, "password", "m/44'/0'/0'");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
 
             var spendingAddress = new HdAddress
             {
@@ -1420,6 +1459,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "account1",
                 HdPath = "m/44'/0'/0'",
                 ExtendedPubKey = accountKeys.ExtPubKey,
@@ -1467,9 +1507,9 @@ namespace Blockcore.Features.Wallet.Tests
 
             Types.Wallet wallet = this.walletFixture.GenerateBlankWallet("myWallet1", "password");
             (ExtKey ExtKey, string ExtPubKey) accountKeys = WalletTestsHelpers.GenerateAccountKeys(wallet, "password", "m/44'/0'/0'");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
 
             var spendingAddress = new HdAddress
             {
@@ -1510,6 +1550,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "account1",
                 HdPath = "m/44'/0'/0'",
                 ExtendedPubKey = accountKeys.ExtPubKey,
@@ -1554,9 +1595,9 @@ namespace Blockcore.Features.Wallet.Tests
 
             Types.Wallet wallet = this.walletFixture.GenerateBlankWallet("myWallet1", "password");
             (ExtKey ExtKey, string ExtPubKey) accountKeys = WalletTestsHelpers.GenerateAccountKeys(wallet, "password", "m/44'/0'/0'");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/1");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/1");
 
             var spendingAddress = new HdAddress
             {
@@ -1597,6 +1638,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "account1",
                 HdPath = "m/44'/0'/0'",
                 ExtendedPubKey = accountKeys.ExtPubKey,
@@ -1647,8 +1689,8 @@ namespace Blockcore.Features.Wallet.Tests
 
             Types.Wallet wallet = this.walletFixture.GenerateBlankWallet("myWallet1", "password");
             (ExtKey ExtKey, string ExtPubKey) accountKeys = WalletTestsHelpers.GenerateAccountKeys(wallet, "password", "m/44'/0'/0'");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
 
             var spendingAddress = new HdAddress
             {
@@ -1679,6 +1721,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "account1",
                 HdPath = "m/44'/0'/0'",
                 ExtendedPubKey = accountKeys.ExtPubKey,
@@ -1721,9 +1764,9 @@ namespace Blockcore.Features.Wallet.Tests
 
             Types.Wallet wallet = this.walletFixture.GenerateBlankWallet("myWallet1", "password");
             (ExtKey ExtKey, string ExtPubKey) accountKeys = WalletTestsHelpers.GenerateAccountKeys(wallet, "password", "m/44'/0'/0'");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
 
             var spendingAddress = new HdAddress
             {
@@ -1764,6 +1807,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "account1",
                 HdPath = "m/44'/0'/0'",
                 ExtendedPubKey = accountKeys.ExtPubKey,
@@ -1818,9 +1862,9 @@ namespace Blockcore.Features.Wallet.Tests
 
             Types.Wallet wallet = this.walletFixture.GenerateBlankWallet("myWallet1", "password");
             (ExtKey ExtKey, string ExtPubKey) accountKeys = WalletTestsHelpers.GenerateAccountKeys(wallet, "password", "m/44'/0'/0'");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
 
             var spendingAddress = new HdAddress
             {
@@ -1861,6 +1905,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "account1",
                 HdPath = "m/44'/0'/0'",
                 ExtendedPubKey = accountKeys.ExtPubKey,
@@ -2253,6 +2298,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Name = "First account",
+                Purpose = 44,
                 ExternalAddresses = WalletTestsHelpers.CreateSpentTransactionsOfBlockHeights((WalletMemoryStore)wallet.walletStore, this.Network, 1, 2, 3, 4, 5).ToList(),
                 InternalAddresses = WalletTestsHelpers.CreateSpentTransactionsOfBlockHeights((WalletMemoryStore)wallet.walletStore, this.Network, 1, 2, 3, 4, 5).ToList()
             });
@@ -2313,9 +2359,9 @@ namespace Blockcore.Features.Wallet.Tests
 
             Types.Wallet wallet = this.walletFixture.GenerateBlankWallet("myWallet1", "password");
             (ExtKey ExtKey, string ExtPubKey) accountKeys = WalletTestsHelpers.GenerateAccountKeys(wallet, "password", "m/44'/0'/0'");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
 
             var spendingAddress = new HdAddress
             {
@@ -2361,6 +2407,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "account1",
                 HdPath = "m/44'/0'/0'",
                 ExtendedPubKey = accountKeys.ExtPubKey,
@@ -2823,7 +2870,7 @@ namespace Blockcore.Features.Wallet.Tests
         [Fact]
         public void CreateBip44PathWithChangeAddressReturnsPath()
         {
-            string result = HdOperations.CreateHdPath((int)KnownCoinTypes.Stratis, 4, true, 3);
+            string result = HdOperations.CreateHdPath(44, (int)KnownCoinTypes.Stratis, 4, true, 3);
 
             Assert.Equal("m/44'/105'/4'/1/3", result);
         }
@@ -2831,9 +2878,17 @@ namespace Blockcore.Features.Wallet.Tests
         [Fact]
         public void CreateBip44PathWithoutChangeAddressReturnsPath()
         {
-            string result = HdOperations.CreateHdPath((int)KnownCoinTypes.Stratis, 4, false, 3);
+            string result = HdOperations.CreateHdPath(44, (int)KnownCoinTypes.Stratis, 4, false, 3);
 
             Assert.Equal("m/44'/105'/4'/0/3", result);
+        }
+
+        [Fact]
+        public void CreateBip84PathWithoutChangeAddressReturnsPath()
+        {
+            string result = HdOperations.CreateHdPath(84, (int)KnownCoinTypes.Stratis, 4, false, 3);
+
+            Assert.Equal("m/84'/105'/4'/0/3", result);
         }
 
         [Fact]
@@ -3058,9 +3113,9 @@ namespace Blockcore.Features.Wallet.Tests
 
             Types.Wallet wallet = this.walletFixture.GenerateBlankWallet("myWallet1", "password");
             (ExtKey ExtKey, string ExtPubKey) accountKeys = WalletTestsHelpers.GenerateAccountKeys(wallet, "password", "m/44'/0'/0'");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
+            (NBitcoin.PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
 
             var spendingAddress = new HdAddress
             {
@@ -3101,6 +3156,7 @@ namespace Blockcore.Features.Wallet.Tests
             wallet.AccountsRoot.ElementAt(0).Accounts.Add(new HdAccount
             {
                 Index = 0,
+                Purpose = 44,
                 Name = "account1",
                 HdPath = "m/44'/0'/0'",
                 ExtendedPubKey = accountKeys.ExtPubKey,
@@ -3262,7 +3318,7 @@ namespace Blockcore.Features.Wallet.Tests
 
             try
             {
-                wallet.AddNewAccount(ExtPubKey.Parse(stratisAccount1ExtPubKey), 0, DateTime.Now.AddHours(-2));
+                wallet.AddNewAccount(ExtPubKey.Parse(stratisAccount1ExtPubKey), 0, DateTime.Now.AddHours(-2), 44);
 
                 Assert.True(false, "should have thrown exception but didn't.");
             }
@@ -3281,7 +3337,7 @@ namespace Blockcore.Features.Wallet.Tests
             var walletManager = this.CreateWalletManager(dataFolder, KnownNetworks.StratisMain);
             var wallet = walletManager.RecoverWallet("wallet1", ExtPubKey.Parse(stratisAccount0ExtPubKey), 0, DateTime.Now.AddHours(-2));
 
-            var addNewAccount = new Action(() => wallet.AddNewAccount(ExtPubKey.Parse(stratisAccount0ExtPubKey), 1, DateTime.Now.AddHours(-2)));
+            var addNewAccount = new Action(() => wallet.AddNewAccount(ExtPubKey.Parse(stratisAccount0ExtPubKey), 1, DateTime.Now.AddHours(-2), 44));
 
             addNewAccount.Should().Throw<WalletException>()
                 .WithMessage("There is already an account in this wallet with this xpubkey: " + stratisAccount0ExtPubKey);

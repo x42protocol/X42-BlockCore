@@ -5,20 +5,21 @@ using System.Linq;
 using System.Net;
 using System.Security;
 using System.Text;
-using System.Threading.Tasks;
+using Asp.Versioning;
 using Blockcore.Connection;
 using Blockcore.Connection.Broadcasting;
-using Blockcore.Consensus;
 using Blockcore.Consensus.Chain;
-using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.Features.BlockStore.Models;
 using Blockcore.Features.Wallet.Api.Models;
-using Blockcore.Features.Wallet.Api.Models.XDocuments;
 using Blockcore.Features.Wallet.Exceptions;
 using Blockcore.Features.Wallet.Interfaces;
 using Blockcore.Features.Wallet.Types;
 using Blockcore.Interfaces;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.BIP32;
+using Blockcore.NBitcoin.BIP39;
+using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.Networks;
 using Blockcore.Utilities;
 using Blockcore.Utilities.JsonErrors;
@@ -26,8 +27,6 @@ using Blockcore.Utilities.ModelStateErrors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
-using NBitcoin.DataEncoders;
 
 namespace Blockcore.Features.Wallet.Api.Controllers
 {
@@ -65,15 +64,6 @@ namespace Blockcore.Features.Wallet.Api.Controllers
         /// <summary>Provider of date time functionality.</summary>
         private readonly IDateTimeProvider dateTimeProvider;
 
-        private readonly IConsensusManager consensusManager;
-
-        private readonly IBlockStore blockStore;
-
-        private static string newTxHash = "";
-
-        private readonly IMultisigManager multisigManager;
-        private readonly IXDocumentManager _xDocumentManager;
-
         public WalletController(
             ILoggerFactory loggerFactory,
             IWalletManager walletManager,
@@ -83,11 +73,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             Network network,
             ChainIndexer chainIndexer,
             IBroadcasterManager broadcasterManager,
-            IDateTimeProvider dateTimeProvider,
-            IConsensusManager consensusManager,
-            IBlockStore blockStore,
-            IMultisigManager multisigManager,
-            IXDocumentManager xDocumentManager)
+            IDateTimeProvider dateTimeProvider)
         {
             this.walletManager = walletManager;
             this.walletTransactionHandler = walletTransactionHandler;
@@ -99,10 +85,6 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.broadcasterManager = broadcasterManager;
             this.dateTimeProvider = dateTimeProvider;
-            this.consensusManager = consensusManager;
-            this.blockStore = blockStore;
-            this.multisigManager = multisigManager;
-            this._xDocumentManager = xDocumentManager;
         }
 
         /// <summary>
@@ -149,7 +131,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             {
                 Mnemonic requestMnemonic = string.IsNullOrEmpty(request.Mnemonic) ? null : new Mnemonic(request.Mnemonic);
 
-                Mnemonic mnemonic = this.walletManager.CreateWallet(request.Password, request.Name, request.Passphrase, mnemonic: requestMnemonic);
+                Mnemonic mnemonic = this.walletManager.CreateWallet(request.Password, request.Name, request.Passphrase, mnemonic: requestMnemonic, purpose: request.Purpose);
 
                 // start syncing the wallet from the creation date
                 this.walletSyncManager.SyncFromDate(this.dateTimeProvider.GetUtcNow());
@@ -285,7 +267,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
 
             try
             {
-                Types.Wallet wallet = this.walletManager.RecoverWallet(request.Password, request.Name, request.Mnemonic, request.CreationDate, passphrase: request.Passphrase, request.CoinType, request.IsColdStakingWallet);
+                Types.Wallet wallet = this.walletManager.RecoverWallet(request.Password, request.Name, request.Mnemonic, request.CreationDate, passphrase: request.Passphrase, purpose: request.Purpose, request.CoinType, request.IsColdStakingWallet);
 
                 this.SyncFromBestHeightForRecoveredWallets(request.CreationDate);
 
@@ -335,8 +317,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
                         ? request.ExtPubKey
                         : LegacyExtPubKeyConverter.ConvertIfInLegacyStratisFormat(request.ExtPubKey, this.network);
 
-                this.walletManager.RecoverWallet(request.Name, ExtPubKey.Parse(accountExtPubKey), request.AccountIndex,
-                    request.CreationDate);
+                this.walletManager.RecoverWallet(request.Name, ExtPubKey.Parse(accountExtPubKey), request.AccountIndex, request.CreationDate, request.Purpose);
 
                 this.SyncFromBestHeightForRecoveredWallets(request.CreationDate);
 
@@ -360,29 +341,6 @@ namespace Blockcore.Features.Wallet.Api.Controllers
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
             }
         }
-
-        [Route("publicKey")]
-        [HttpGet]
-        public IActionResult GetPublicKey(string address, string walletName, string accountName)
-        {
-
-            Types.Wallet wallet = this.walletManager.GetWallet(walletName);
-            HdAddress hdAddress = wallet.GetAddress(address, account => account.Name.Equals(accountName));
-
-            try
-            {
-                return Ok(hdAddress.Pubkey.ToHex());
-
-            }
-            catch (Exception e)
-            {
-
-                this.logger.LogError(e.Message);
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
-
-        }
-
 
         /// <summary>
         /// Gets some general information about a wallet. This includes the network the wallet is for,
@@ -437,69 +395,6 @@ namespace Blockcore.Features.Wallet.Api.Controllers
         }
 
         /// <summary>
-        /// Toggle's the type of wallet for cold staking.
-        /// </summary>
-        /// <param name="request">The name of the wallet to get the information for, and if it's a cold wallet or not.</param>
-        /// <returns>A JSON true.</returns>
-        [Route("setcoldhotstate")]
-        [HttpPost]
-        public IActionResult SetColdHotState([FromBody] ToggleColdRequest request)
-        {
-            Guard.NotNull(request, nameof(request));
-
-            // checks the request is valid
-            if (!this.ModelState.IsValid)
-            {
-                return ModelStateErrors.BuildErrorResponse(this.ModelState);
-            }
-
-            try
-            {
-                Types.Wallet wallet = this.walletManager.GetWallet(request.Name);
-                wallet.isColdHotWallet = request.isColdHotWallet;
-                this.walletManager.SaveWallet(wallet);
-
-                return this.Ok();
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError(e, "Exception occurred: {0}");
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
-        }
-
-        /// <summary>
-        /// Get's the cold staking type for wallet.
-        /// </summary>
-        /// <param name="request">The name of the wallet to get the information for.</param>
-        /// <returns>A JSON true/false.</returns>
-        [Route("getcoldhotstate")]
-        [HttpGet]
-        public IActionResult GetColdHotState([FromQuery] WalletName request)
-        {
-            Guard.NotNull(request, nameof(request));
-
-            // checks the request is valid
-            if (!this.ModelState.IsValid)
-            {
-                return ModelStateErrors.BuildErrorResponse(this.ModelState);
-            }
-
-            try
-            {
-                Types.Wallet wallet = this.walletManager.GetWallet(request.Name);
-
-                return this.Json(wallet.isColdHotWallet);
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError(e, "Exception occurred: {0}");
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
-        }
-
-
-        /// <summary>
         /// Gets the history of a wallet. This includes the transactions held by the entire wallet
         /// or a single account if one is specified.
         /// </summary>
@@ -530,12 +425,10 @@ namespace Blockcore.Features.Wallet.Api.Controllers
         }
 
         /// <summary>
-        /// Slim version of the history of a wallet. This includes the transactions held by the entire wallet
-        /// or a single account if one is specified.
+        /// Gets the history of a wallet with reduced metadata. Note: This method will filter out transactions sent to self wallet.
         /// </summary>
         /// <param name="request">An object containing the parameters used to retrieve a wallet's history.</param>
         /// <returns>A JSON object containing the wallet history.</returns>
-        [Route("historyslim")]
         [Route("history/slim")]
         [HttpGet]
         public IActionResult GetHistorySlim([FromQuery] WalletHistoryRequest request)
@@ -823,17 +716,17 @@ namespace Blockcore.Features.Wallet.Api.Controllers
                     });
                 }
 
-                Types.Wallet wallet = this.walletManager.GetWallet(request.WalletName);
-                HdAccount account = wallet.GetAccount(request.AccountName);
-                if (account == null)
-                {
-                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, "Account not found.", $"No account with the name '{request.AccountName}' could be found in wallet {wallet.Name}.");
-                }
-
                 // If specified, get the change address, which must already exist in the wallet.
                 HdAddress changeAddress = null;
                 if (!string.IsNullOrWhiteSpace(request.ChangeAddress))
                 {
+                    Types.Wallet wallet = this.walletManager.GetWallet(request.WalletName);
+                    HdAccount account = wallet.GetAccount(request.AccountName);
+                    if (account == null)
+                    {
+                        return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, "Account not found.", $"No account with the name '{request.AccountName}' could be found in wallet {wallet.Name}.");
+                    }
+
                     changeAddress = account.GetCombinedAddresses().FirstOrDefault(x => x.Address == request.ChangeAddress);
 
                     if (changeAddress == null)
@@ -860,7 +753,6 @@ namespace Blockcore.Features.Wallet.Api.Controllers
                     AllowOtherInputs = false,
                     Recipients = recipients,
                     ChangeAddress = changeAddress,
-                    UseSegwitChangeAddress = request.SegwitChangeAddress
                 };
 
                 if (!string.IsNullOrEmpty(request.FeeType))
@@ -874,8 +766,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
                 {
                     Hex = transactionResult.ToHex(),
                     Fee = context.TransactionFee,
-                    TransactionId = transactionResult.GetHash(),
-                    InputAddress = wallet.walletStore.GetForOutput(transactionResult.Inputs[0].PrevOut).Address
+                    TransactionId = transactionResult.GetHash()
                 };
 
                 return this.Json(model);
@@ -1007,47 +898,6 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             }
         }
 
-
-
-
-        [Route("fund-multi-sig")]
-        [HttpPost]
-        public async Task<IActionResult> FundMultisig(FundMultisigInput input)
-        {
-            var result = await this.multisigManager.FundMultisigAsync(input);
-            return Ok(result);
-        }
-
-
-
-        [Route("create-unsigned-multisig")]
-        [HttpPost]
-        public async Task<IActionResult> CreateUnsignedMultisigPaymentAsync(SpendMultisigInput input)
-        {
-            var result = await this.multisigManager.CreateUnsignedMultisigPayment(input);
-            return Ok(result);
-
-        }
-
-        [Route("sign-multisig-payment")]
-        [HttpPost]
-        public async Task<IActionResult> SignMultisigPaymentAsync(PartiallySignedMultisigInput input)
-        {
-            var result = await this.multisigManager.SignMultisigPaymentAsync(input);
-            return Ok(result);
-
-        }
-
-        [Route("build-signed-transaction")]
-        [HttpPost]
-        public async Task<IActionResult> BuildFullySignedTransactionAsync(BuildFullySignedTransactionInput input)
-        {
-            var result = await this.multisigManager.BuildFullySignedTransactionAsync(input);
-            return Ok(result);
-
-        }
-
-
         /// <summary>
         /// Lists all the files found in the default wallet folder.
         /// </summary>
@@ -1103,7 +953,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
 
             try
             {
-                HdAccount result = this.walletManager.GetUnusedAccount(request.WalletName, request.Password);
+                HdAccount result = this.walletManager.GetUnusedAccount(request.WalletName, request.Password, request.Purpose);
                 return this.Json(result.Name);
             }
             catch (CannotAddAccountToXpubKeyWalletException e)
@@ -1169,7 +1019,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             try
             {
                 HdAddress result = this.walletManager.GetUnusedAddress(new WalletAccountReference(request.WalletName, request.AccountName));
-                return this.Json(request.Segwit ? result.Bech32Address : result.Address);
+                return this.Json(result.Address);
             }
             catch (Exception e)
             {
@@ -1202,7 +1052,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             try
             {
                 IEnumerable<HdAddress> result = this.walletManager.GetUnusedAddresses(new WalletAccountReference(request.WalletName, request.AccountName), count);
-                return this.Json(result.Select(x => request.Segwit ? x.Bech32Address : x.Address).ToArray());
+                return this.Json(result.Select(x => x.Address).ToArray());
             }
             catch (Exception e)
             {
@@ -1244,7 +1094,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
 
                         return new AddressModel
                         {
-                            Address = request.Segwit ? address.Bech32Address : address.Address,
+                            Address = address.Address,
                             IsUsed = anyTrx,
                             IsChange = address.IsChangeAddress(),
                             AmountConfirmed = confirmedAmount,
@@ -1760,24 +1610,6 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             }
         }
 
-
-        [HttpPost]
-        [Route("create-x-document")]
-        public async Task<IActionResult> CreateXDocument([FromBody] XDocumentCreateModel input)
-        {
-            try
-            {
-                var result = await this._xDocumentManager.CreateDocument(input);
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError("Exception occurred: {0}", e.ToString());
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
-        }
-
-
         /// <summary>
         /// Sweeps one or more private keys to another address.
         /// </summary>
@@ -1792,7 +1624,7 @@ namespace Blockcore.Features.Wallet.Api.Controllers
                 var responseModel = this.walletManager.Sweep(request.PrivateKeys, request.DestinationAddress, request.Broadcast);
                 return this.Json(responseModel);
             }
-            catch (Exception e)
+            catch(Exception e)
             {
                 this.logger.LogError("Exception occurred: {0}", e.ToString());
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
@@ -1822,6 +1654,6 @@ namespace Blockcore.Features.Wallet.Api.Controllers
             {
                 return (null, false);
             }
-        }
+        }        
     }
 }

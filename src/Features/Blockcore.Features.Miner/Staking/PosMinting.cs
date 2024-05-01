@@ -24,13 +24,12 @@ using Blockcore.Features.Wallet.Interfaces;
 using Blockcore.Features.Wallet.Types;
 using Blockcore.Interfaces;
 using Blockcore.Mining;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.BuilderExtensions;
+using Blockcore.NBitcoin.Crypto;
 using Blockcore.Networks;
 using Blockcore.Utilities;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
-using NBitcoin.BuilderExtensions;
-using NBitcoin.Crypto;
-using NBitcoin.Protocol;
 
 namespace Blockcore.Features.Miner.Staking
 {
@@ -71,7 +70,7 @@ namespace Blockcore.Features.Miner.Staking
     /// and the new value depends on the kernel, it is hard to predict its value in the future.
     /// </para>
     /// </remarks>
-    public class PosMinting : IPosMinting
+    public class PosMinting : IPosMinting, INetworkWeight
     {
         /// <summary>
         /// Indicates the current state: idle, staking requested, staking in progress and stop staking requested.
@@ -454,11 +453,25 @@ namespace Blockcore.Features.Miner.Staking
                 {
                     if (this.minerSettings.EnforceStakingFlag)
                     {
-                        if (utxo.Address.StakingExpiry == null)
-                            return false;
+                        if (utxo.Address.RedeemScriptExpiry != null)
+                        {
+                            foreach (RedeemScriptExpiry redeemScriptExpiry in utxo.Address.RedeemScriptExpiry)
+                            {
+                                if (redeemScriptExpiry.RedeemScript.Hash.ScriptPubKey == utxo.Transaction.ScriptPubKey ||
+                                    redeemScriptExpiry.RedeemScript.WitHash.ScriptPubKey == utxo.Transaction.ScriptPubKey)
+                                {
+                                    if (redeemScriptExpiry.StakingExpiry > this.dateTimeProvider.GetUtcNow())
+                                        return true;
 
-                        if (utxo.Address.StakingExpiry < this.dateTimeProvider.GetUtcNow())
-                            return false;
+                                    return false;
+                                }
+                            }
+                        }
+
+                        if (utxo.Address.StakingExpiry > this.dateTimeProvider.GetUtcNow())
+                            return true;
+
+                        return false;
                     }
 
                     return true;
@@ -740,7 +753,7 @@ namespace Blockcore.Features.Miner.Staking
             long coinstakeOutputValue = coinstakeInput.TxOut.Value + reward;
 
             int eventuallyStakableUtxosCount = utxoStakeDescriptions.Count;
-            Transaction coinstakeTx = this.PrepareCoinStakeTransactions(chainTip.Height, coinstakeContext, coinstakeOutputValue, eventuallyStakableUtxosCount, ourWeight);
+            Transaction coinstakeTx = this.PrepareCoinStakeTransactions(chainTip.Height, coinstakeContext, coinstakeOutputValue, eventuallyStakableUtxosCount, ourWeight, reward);
 
             if (coinstakeTx is IPosTransactionWithTime posTrxn)
             {
@@ -767,7 +780,7 @@ namespace Blockcore.Features.Miner.Staking
             return true;
         }
 
-        internal Transaction PrepareCoinStakeTransactions(int currentChainHeight, CoinstakeContext coinstakeContext, long coinstakeOutputValue, int utxosCount, long amountStaked)
+        public virtual Transaction PrepareCoinStakeTransactions(int currentChainHeight, CoinstakeContext coinstakeContext, long coinstakeOutputValue, int utxosCount, long amountStaked, long reward)
         {
             // Split stake into SplitFactor utxos if above threshold.
             bool shouldSplitStake = this.ShouldSplitStake(utxosCount, amountStaked, coinstakeOutputValue, currentChainHeight);
@@ -947,10 +960,15 @@ namespace Blockcore.Features.Miner.Staking
                 if (PayToScriptHashTemplate.Instance.CheckScriptPubKey(input.TxOut.ScriptPubKey) ||
                     PayToWitScriptHashTemplate.Instance.CheckScriptPubKey(input.TxOut.ScriptPubKey))
                 {
-                    if (input.Address.RedeemScript == null)
-                        throw new MinerException("Redeem script does not match output");
+                    if (input.Address.RedeemScripts == null)
+                        throw new MinerException("Wallet has no redeem scripts");
 
-                    var scriptCoin = ScriptCoin.Create(this.network, input.OutPoint, input.TxOut, input.Address.RedeemScript);
+                    Script redeemScript = input.Address.RedeemScripts.FirstOrDefault(r => r.Hash.ScriptPubKey == input.TxOut.ScriptPubKey || r.WitHash.ScriptPubKey == input.TxOut.ScriptPubKey);
+
+                    if (redeemScript == null)
+                        throw new MinerException($"RedeemScript was not found for address {input.Address.Address} with output {input.TxOut.ScriptPubKey}");
+
+                     var scriptCoin = ScriptCoin.Create(this.network, input.OutPoint, input.TxOut, redeemScript);
 
                     transactionBuilder.AddCoins(scriptCoin);
                 }
@@ -968,7 +986,7 @@ namespace Blockcore.Features.Miner.Staking
             }
             catch (Exception e)
             {
-                this.logger.LogDebug("Exception occurred: {0}", e.ToString());
+                this.logger.LogWarning("Exception occurred: {0}", e.ToString());
             }
 
             return res;
@@ -1187,6 +1205,11 @@ namespace Blockcore.Features.Miner.Staking
             res *= this.network.Consensus.ProofOfStakeTimestampMask + 1;
 
             return res;
+        }
+
+        public double GetPosNetworkWeight()
+        {
+            return GetNetworkWeight();
         }
 
         /// <inheritdoc/>

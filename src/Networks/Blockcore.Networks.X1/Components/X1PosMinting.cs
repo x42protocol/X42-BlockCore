@@ -26,14 +26,13 @@ using Blockcore.Features.Wallet.Interfaces;
 using Blockcore.Features.Wallet.Types;
 using Blockcore.Interfaces;
 using Blockcore.Mining;
+using Blockcore.NBitcoin;
+using Blockcore.NBitcoin.BuilderExtensions;
+using Blockcore.NBitcoin.Crypto;
 using Blockcore.Networks;
 using Blockcore.Networks.X1.Consensus;
 using Blockcore.Utilities;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
-using NBitcoin.BuilderExtensions;
-using NBitcoin.Crypto;
-using NBitcoin.Protocol;
 
 namespace Blockcore.Networks.X1.Components
 {
@@ -961,10 +960,15 @@ namespace Blockcore.Networks.X1.Components
                 if (PayToScriptHashTemplate.Instance.CheckScriptPubKey(input.TxOut.ScriptPubKey) ||
                     PayToWitScriptHashTemplate.Instance.CheckScriptPubKey(input.TxOut.ScriptPubKey))
                 {
-                    if (input.Address.RedeemScript == null)
-                        throw new MinerException("Redeem script does not match output");
+                    if (input.Address.RedeemScripts == null)
+                        throw new MinerException("Wallet has no redeem scripts");
 
-                    var scriptCoin = ScriptCoin.Create(this.network, input.OutPoint, input.TxOut, input.Address.RedeemScript);
+                    Script redeemScript = input.Address.RedeemScripts.FirstOrDefault(r => r.Hash.ScriptPubKey == input.TxOut.ScriptPubKey || r.WitHash.ScriptPubKey == input.TxOut.ScriptPubKey);
+
+                    if (redeemScript == null)
+                        throw new MinerException($"RedeemScript was not found for address {input.Address.Address} with output {input.TxOut.ScriptPubKey}");
+
+                    var scriptCoin = ScriptCoin.Create(this.network, input.OutPoint, input.TxOut, redeemScript);
 
                     transactionBuilder.AddCoins(scriptCoin);
                 }
